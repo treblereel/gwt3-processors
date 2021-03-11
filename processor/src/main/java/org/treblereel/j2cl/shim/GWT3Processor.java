@@ -3,6 +3,8 @@ package org.treblereel.j2cl.shim;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.annotation.processing.AbstractProcessor;
@@ -11,8 +13,7 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.*;
 import javax.tools.Diagnostic;
 import javax.tools.FileObject;
 import javax.tools.StandardLocation;
@@ -20,11 +21,12 @@ import javax.tools.StandardLocation;
 import com.google.auto.common.MoreElements;
 import com.google.auto.service.AutoService;
 import jsinterop.annotations.JsType;
+import org.treblereel.j2cl.processors.annotations.ES6Module;
 
 @AutoService(Processor.class)
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
-@SupportedAnnotationTypes({"jsinterop.annotations.JsType","org.treblereel.j2cl.processors.annotations.ES6Module"})
-public class ES6ShimProcessor extends AbstractProcessor {
+@SupportedAnnotationTypes({"jsinterop.annotations.JsType", "org.treblereel.j2cl.processors.annotations.ES6Module"})
+public class GWT3Processor extends AbstractProcessor {
 
     private final String ES6MODULE = "ES6Module";
     private final String CLOSURE_JS = ".closure.js";
@@ -53,9 +55,36 @@ public class ES6ShimProcessor extends AbstractProcessor {
     private void process(Element element, JsType jsType) {
         TypeElement typeElement = MoreElements.asType(element);
         String clazzName = jsType.name().equals("<auto>") ? typeElement.getSimpleName().toString() : jsType.name();
+        String moduleFileName;
+        Optional<String> isPathDefined = isPathDefined(element);
+        if (isPathDefined.isPresent()) {
+            moduleFileName = isPathDefined.get();
+        } else {
+            moduleFileName = clazzName + ".js";
+        }
 
         generateClosure(typeElement, clazzName);
-        generateShim(typeElement, clazzName);
+        generateShim(typeElement, clazzName, moduleFileName);
+    }
+
+    private Optional<String> isPathDefined(Element element) {
+        for (AnnotationMirror annotationMirror : element.getAnnotationMirrors()) {
+            if (annotationMirror.getAnnotationType().asElement().getSimpleName().toString().equals("ES6Module")) {
+                if (!annotationMirror.getElementValues().isEmpty()) {
+                    Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry = annotationMirror.getElementValues()
+                            .entrySet()
+                            .iterator()
+                            .next();
+                    if (entry.getKey().toString().equals("value()")) {
+                        String value = entry.getValue().getValue().toString();
+                        if (!value.equals("<auto>")) {
+                            return Optional.of(value);
+                        }
+                    }
+                }
+            }
+        }
+        return Optional.empty();
     }
 
     private void generateClosure(TypeElement typeElement, String clazzName) {
@@ -79,15 +108,15 @@ public class ES6ShimProcessor extends AbstractProcessor {
         writeResource(typeElement.getSimpleName() + CLOSURE_JS, pkg, source.toString());
     }
 
-    private void generateShim(TypeElement typeElement, String clazzName) {
+    private void generateShim(TypeElement typeElement, String clazzName, String moduleFileName) {
         String pkg = MoreElements.getPackage(typeElement).getQualifiedName().toString();
         StringBuffer source = new StringBuffer();
 
         source.append("import {");
         source.append(clazzName);
         source.append("} from './");
-        source.append(clazzName);
-        source.append(".js';");
+        source.append(moduleFileName);
+        source.append("';");
         source.append(System.lineSeparator());
 
         source.append("goog.declareModuleId('");

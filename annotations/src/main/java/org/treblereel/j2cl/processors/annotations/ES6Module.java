@@ -13,4 +13,6 @@ import java.lang.annotation.Target;
 @Target({ElementType.TYPE})
 public @interface ES6Module {
 
+    String value() default "<auto>";
+
 }
