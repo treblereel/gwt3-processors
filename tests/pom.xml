@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>org.treblereel.j2cl</groupId>
+  <artifactId>tests</artifactId>
+  <version>0.1</version>
+
+  <name>GWT3 processors Tests</name>
+  <description>Test cases for the GWT3 processors</description>
+  <url>https://github.com/treblereel/gwt3-processors</url>
+
+  <properties>
+    <maven.j2cl.plugin>0.17-SNAPSHOT</maven.j2cl.plugin>
+
+    <!-- CI -->
+    <vertispan.j2cl.repo.url>https://repo.vertispan.com/j2cl/</vertispan.j2cl.repo.url>
+
+    <j2cl.version>0.9-SNAPSHOT</j2cl.version>
+
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.treblereel.j2cl.processors</groupId>
+      <artifactId>annotations</artifactId>
+      <version>0.1-SNAPSHOT</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.treblereel.j2cl.processors</groupId>
+      <artifactId>processors</artifactId>
+      <version>0.1-SNAPSHOT</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.jsinterop</groupId>
+      <artifactId>jsinterop-annotations</artifactId>
+      <version>2.0.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.google.jsinterop</groupId>
+      <artifactId>base</artifactId>
+      <version>1.0.0</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/com.google.elemental2/elemental2-dom -->
+    <dependency>
+      <groupId>com.google.elemental2</groupId>
+      <artifactId>elemental2-dom</artifactId>
+      <version>1.1.0</version>
+      <scope>test</scope>
+    </dependency>
+
+
+    <!-- test dependencies -->
+    <dependency>
+      <groupId>com.vertispan.j2cl</groupId>
+      <artifactId>junit-annotations</artifactId>
+      <version>${j2cl.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.vertispan.j2cl</groupId>
+      <artifactId>gwttestcase-emul</artifactId>
+      <version>${j2cl.version}</version>
+      <classifier>sources</classifier>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.vertispan.j2cl</groupId>
+      <artifactId>junit-emul</artifactId>
+      <version>${j2cl.version}</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>com.vertispan.j2cl</groupId>
+        <artifactId>j2cl-maven-plugin</artifactId>
+        <version>${maven.j2cl.plugin}</version>
+        <configuration>
+          <compilationLevel>ADVANCED</compilationLevel>
+        </configuration>
+        <executions>
+          <execution>
+            <id>j2cl-test</id>
+            <phase>test</phase>
+            <goals>
+              <goal>test</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.17</version>
+        <configuration>
+          <skipTests>true</skipTests>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-deploy-plugin</artifactId>
+        <version>2.8.2</version>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <repositories>
+    <repository>
+      <id>vertispan-releases</id>
+      <name>Vertispan hosted artifacts-releases</name>
+      <url>https://repo.vertispan.com/j2cl</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+
+    <repository>
+      <id>vertispan-snapshots</id>
+      <name>Vertispan Snapshots</name>
+      <url>https://repo.vertispan.com/gwt-snapshot/</url>
+      <snapshots>
+        <enabled>true</enabled>
+        <updatePolicy>daily</updatePolicy>
+        <checksumPolicy>fail</checksumPolicy>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>sonatype-snapshots-repo</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+      <snapshots>
+        <enabled>true</enabled>
+        <updatePolicy>daily</updatePolicy>
+        <checksumPolicy>fail</checksumPolicy>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>sonatype-repo</id>
+      <url>https://oss.sonatype.org/content/repositories/repositories</url>
+      <snapshots>
+        <enabled>true</enabled>
+        <updatePolicy>daily</updatePolicy>
+        <checksumPolicy>fail</checksumPolicy>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>sonatype</id>
+      <name>sonatype</name>
+      <url>https://oss.sonatype.org/content/repositories/releases/</url>
+    </repository>
+  </repositories>
+
+  <pluginRepositories>
+    <pluginRepository>
+      <id>vertispan-releases</id>
+      <name>Vertispan hosted artifacts-releases</name>
+      <url>${vertispan.j2cl.repo.url}</url>
+    </pluginRepository>
+  </pluginRepositories>
+</project>
