@@ -1,55 +1,41 @@
-package org.treblereel.j2cl.shim;
-
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-
-import javax.annotation.processing.AbstractProcessor;
-import javax.annotation.processing.Processor;
-import javax.annotation.processing.RoundEnvironment;
-import javax.annotation.processing.SupportedAnnotationTypes;
-import javax.annotation.processing.SupportedSourceVersion;
-import javax.lang.model.SourceVersion;
-import javax.lang.model.element.*;
-import javax.tools.Diagnostic;
-import javax.tools.FileObject;
-import javax.tools.StandardLocation;
+package org.treblereel.j2cl.processors.generator;
 
 import com.google.auto.common.MoreElements;
-import com.google.auto.service.AutoService;
 import jsinterop.annotations.JsType;
 import org.treblereel.j2cl.processors.annotations.ES6Module;
+import org.treblereel.j2cl.processors.context.AptContext;
+import org.treblereel.j2cl.processors.exception.GenerationException;
 
-@AutoService(Processor.class)
-@SupportedSourceVersion(SourceVersion.RELEASE_8)
-@SupportedAnnotationTypes({"jsinterop.annotations.JsType", "org.treblereel.j2cl.processors.annotations.ES6Module"})
-public class GWT3Processor extends AbstractProcessor {
+import javax.lang.model.element.*;
+import java.util.Map;
+import java.util.Optional;
 
-    private final String ES6MODULE = "ES6Module";
+public class ES6ModuleShimGenerator extends AbstractGenerator {
+
     private final String CLOSURE_JS = ".closure.js";
     private final String SHIM_JS = ".shim.js";
-    private int counter = 0;
+
+    public ES6ModuleShimGenerator(AptContext context) {
+        super(context);
+        context.register(JsType.class.getSimpleName(), this);
+    }
 
     @Override
-    public boolean process(Set<? extends TypeElement> elements, RoundEnvironment roundEnv) {
-        if (elements.isEmpty()) {
-            return false;
+    public void generate(Element element) {
+        if (element.getAnnotationMirrors()
+                .stream()
+                .filter(e -> e.getAnnotationType().asElement()
+                        .getSimpleName().toString().equals(ES6Module.class.getSimpleName())).count() != 1) {
+            return;
         }
 
-        roundEnv.getElementsAnnotatedWith(JsType.class)
-                .stream()
-                .filter(e -> e.getAnnotation(JsType.class).isNative())
-                .filter(elm -> elm.getAnnotationMirrors().stream().filter(e -> e.getAnnotationType().asElement().getSimpleName().toString().equals(ES6MODULE)).count() == 1)
-                .forEach(module -> {
-                    process(module, module.getAnnotation(JsType.class));
-                    counter++;
-                });
+        JsType jsType = element.getAnnotation(JsType.class);
+        if (!jsType.isNative()) {
+            throw new GenerationException("@ES6Module class must be annotated with @JsType.isNative=true annotation");
+        }
 
-        System.out.println("Total processed files " + counter);
-        return false;
+        process(element, jsType);
+
     }
 
     private void process(Element element, JsType jsType) {
@@ -130,18 +116,5 @@ public class GWT3Processor extends AbstractProcessor {
         source.append(System.lineSeparator());
 
         writeResource(typeElement.getSimpleName() + SHIM_JS, pkg, source.toString());
-    }
-
-    protected void writeResource(String filename, String path, String content) {
-        try {
-            FileObject file =
-                    processingEnv.getFiler().createResource(StandardLocation.SOURCE_OUTPUT, path, filename);
-            PrintWriter pw = new PrintWriter(new OutputStreamWriter(file.openOutputStream(), "UTF-8"));
-            pw.print(content);
-            pw.close();
-        } catch (IOException e) {
-            processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Failed to write file: " + e);
-            throw new RuntimeException(e);
-        }
     }
 }
