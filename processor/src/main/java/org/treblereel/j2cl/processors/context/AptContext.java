@@ -26,10 +26,6 @@ public class AptContext {
             generators.put(annotation, new ArrayList<>());
         }
         generators.get(annotation).add(generator);
-
-        generators.forEach((k,v) -> {
-            System.out.println("REG " + k + " " + v);
-        });
     }
 
     public RoundEnvironment getRoundEnv() {

@@ -30,6 +30,7 @@ public class GWT3Processor extends AbstractProcessor {
 
         context = new AptContext(roundEnv, processingEnv);
 
+        new GWT3EntryPointGenerator(context);
         new ES6ModuleShimGenerator(context);
 
 
