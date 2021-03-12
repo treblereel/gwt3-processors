@@ -17,25 +17,24 @@ public class ES6ModuleShimGenerator extends AbstractGenerator {
 
     public ES6ModuleShimGenerator(AptContext context) {
         super(context);
-        context.register(JsType.class.getSimpleName(), this);
+        context.register(ES6Module.class.getSimpleName(), this);
     }
 
     @Override
     public void generate(Element element) {
-        if (element.getAnnotationMirrors()
-                .stream()
-                .filter(e -> e.getAnnotationType().asElement()
-                        .getSimpleName().toString().equals(ES6Module.class.getSimpleName())).count() != 1) {
-            return;
-        }
+        JsType jsType = check(element);
+        process(element, jsType);
+    }
 
+    private JsType check(Element element) {
         JsType jsType = element.getAnnotation(JsType.class);
+        if (jsType == null) {
+            throw new GenerationException("@ES6Module class must be annotated with @JsType annotation");
+        }
         if (!jsType.isNative()) {
             throw new GenerationException("@ES6Module class must be annotated with @JsType.isNative=true annotation");
         }
-
-        process(element, jsType);
-
+        return jsType;
     }
 
     private void process(Element element, JsType jsType) {

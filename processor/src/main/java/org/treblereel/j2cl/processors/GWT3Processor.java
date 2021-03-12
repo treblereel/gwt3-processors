@@ -17,7 +17,7 @@ import org.treblereel.j2cl.processors.generator.GWT3EntryPointGenerator;
 
 @AutoService(Processor.class)
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
-@SupportedAnnotationTypes({"org.treblereel.j2cl.processors.annotations.GWT3EntryPoint", "jsinterop.annotations.JsType"})
+@SupportedAnnotationTypes({"org.treblereel.j2cl.processors.annotations.GWT3EntryPoint", "org.treblereel.j2cl.processors.annotations.ES6Module"})
 public class GWT3Processor extends AbstractProcessor {
 
     private AptContext context;
