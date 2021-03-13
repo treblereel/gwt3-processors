@@ -16,8 +16,7 @@ public class ES6ModuleShimGenerator extends AbstractGenerator {
     private final String SHIM_JS = ".shim.js";
 
     public ES6ModuleShimGenerator(AptContext context) {
-        super(context);
-        context.register(ES6Module.class.getSimpleName(), this);
+        super(context, ES6Module.class);
     }
 
     @Override

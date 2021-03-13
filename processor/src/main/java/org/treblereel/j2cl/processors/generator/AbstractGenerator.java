@@ -1,5 +1,6 @@
 package org.treblereel.j2cl.processors.generator;
 
+import org.treblereel.j2cl.processors.annotations.GWT3EntryPoint;
 import org.treblereel.j2cl.processors.context.AptContext;
 import org.treblereel.j2cl.processors.exception.GenerationException;
 
@@ -10,13 +11,15 @@ import javax.tools.StandardLocation;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.lang.annotation.Annotation;
 
 public abstract class AbstractGenerator {
 
     protected final AptContext context;
 
-    public AbstractGenerator(AptContext context) {
+    public AbstractGenerator(AptContext context, Class<? extends Annotation> annotation) {
         this.context = context;
+        context.register(annotation, this);
     }
 
     public abstract void generate(Element element);

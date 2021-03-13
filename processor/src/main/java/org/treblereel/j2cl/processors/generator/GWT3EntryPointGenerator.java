@@ -15,8 +15,7 @@ public class GWT3EntryPointGenerator extends AbstractGenerator {
 
 
     public GWT3EntryPointGenerator(AptContext context) {
-        super(context);
-        context.register(GWT3EntryPoint.class.getSimpleName(), this);
+        super(context, GWT3EntryPoint.class);
     }
 
     @Override
