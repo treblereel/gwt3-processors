@@ -14,13 +14,12 @@ import com.google.auto.service.AutoService;
 import org.treblereel.j2cl.processors.context.AptContext;
 import org.treblereel.j2cl.processors.generator.ES6ModuleShimGenerator;
 import org.treblereel.j2cl.processors.generator.GWT3EntryPointGenerator;
+import org.treblereel.j2cl.processors.generator.GWT3ExportGenerator;
 
 @AutoService(Processor.class)
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
-@SupportedAnnotationTypes({"org.treblereel.j2cl.processors.annotations.GWT3EntryPoint", "org.treblereel.j2cl.processors.annotations.ES6Module"})
+@SupportedAnnotationTypes({"org.treblereel.j2cl.processors.annotations.GWT3EntryPoint", "org.treblereel.j2cl.processors.annotations.ES6Module", "org.treblereel.j2cl.processors.annotations.GWT3Export"})
 public class GWT3Processor extends AbstractProcessor {
-
-    private AptContext context;
 
     @Override
     public boolean process(Set<? extends TypeElement> elements, RoundEnvironment roundEnv) {
@@ -28,15 +27,16 @@ public class GWT3Processor extends AbstractProcessor {
             return false;
         }
 
-        context = new AptContext(roundEnv, processingEnv);
+        AptContext context = new AptContext(roundEnv, processingEnv);
 
         new GWT3EntryPointGenerator(context);
         new ES6ModuleShimGenerator(context);
+        new GWT3ExportGenerator(context);
 
 
         for (TypeElement element : elements) {
-            if (context.isAnnotationSupported(element.getSimpleName().toString())) {
-                context.getRegistredGeneratorsByAnnotation(element.getSimpleName().toString())
+            if (context.isAnnotationSupported(element.getQualifiedName().toString())) {
+                context.getRegistredGeneratorsByAnnotation(element.getQualifiedName().toString())
                         .forEach(generator -> roundEnv.getElementsAnnotatedWith(element)
                                 .forEach(generator::generate));
             }

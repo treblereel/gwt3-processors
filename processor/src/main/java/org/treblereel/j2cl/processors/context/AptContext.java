@@ -5,6 +5,7 @@ import org.treblereel.j2cl.processors.generator.AbstractGenerator;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -21,11 +22,11 @@ public class AptContext {
         this.processingEnv = processingEnv;
     }
 
-    public void register(String annotation, AbstractGenerator generator) {
-        if (!generators.containsKey(annotation)) {
-            generators.put(annotation, new ArrayList<>());
+    public void register(Class<? extends Annotation> annotation, AbstractGenerator generator) {
+        if (!generators.containsKey(annotation.getCanonicalName())) {
+            generators.put(annotation.getCanonicalName(), new ArrayList<>());
         }
-        generators.get(annotation).add(generator);
+        generators.get(annotation.getCanonicalName()).add(generator);
     }
 
     public RoundEnvironment getRoundEnv() {
