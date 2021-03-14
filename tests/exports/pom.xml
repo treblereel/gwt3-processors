@@ -19,6 +19,7 @@
   <modules>
     <module>pure</module>
     <module>jstype</module>
+    <module>override</module>
   </modules>
 
   <build>

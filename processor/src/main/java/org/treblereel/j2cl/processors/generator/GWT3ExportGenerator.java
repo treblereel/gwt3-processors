@@ -2,6 +2,7 @@ package org.treblereel.j2cl.processors.generator;
 
 import com.google.auto.common.MoreElements;
 import jsinterop.annotations.JsMethod;
+import jsinterop.annotations.JsPackage;
 import jsinterop.annotations.JsProperty;
 import jsinterop.annotations.JsType;
 import org.treblereel.j2cl.processors.annotations.ES6Module;
@@ -10,12 +11,7 @@ import org.treblereel.j2cl.processors.annotations.GWT3Export;
 import org.treblereel.j2cl.processors.context.AptContext;
 import org.treblereel.j2cl.processors.exception.GenerationException;
 
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.Modifier;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
+import javax.lang.model.element.*;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -80,8 +76,9 @@ public class GWT3ExportGenerator extends AbstractGenerator {
     }
 
     private void generateStaticMethod(ExecutableElement element, TypeElement parent, StringBuffer source) {
-        source.append("goog.exportSymbol('window.");
-        source.append(parent.getQualifiedName());
+        source.append("goog.exportSymbol('");
+        maybeAddNamespace(parent.getAnnotation(GWT3Export.class), source);
+        source.append(getTypeName(parent));
         source.append(".");
         source.append(element.getSimpleName().toString());
         source.append("', ");
@@ -101,13 +98,14 @@ public class GWT3ExportGenerator extends AbstractGenerator {
             source.append(parent.getSimpleName());
             source.append(".$create__;");
         } else {
-            source.append(parent.getQualifiedName().toString().replaceAll("\\.","_"));
+            source.append(parent.getQualifiedName().toString().replaceAll("\\.", "_"));
         }
 
         source.append(System.lineSeparator());
 
-        source.append("goog.exportSymbol('window.");
-        source.append(parent.getQualifiedName());
+        source.append("goog.exportSymbol('");
+        maybeAddNamespace(parent.getAnnotation(GWT3Export.class), source);
+        source.append(getTypeName(parent));
         source.append("', _");
         source.append(parent.getSimpleName());
         source.append(");");
@@ -155,6 +153,21 @@ public class GWT3ExportGenerator extends AbstractGenerator {
         if (method.getModifiers().contains(Modifier.NATIVE)) {
             throw new GenerationException("Method,  annotated with " + GWT3Export.class.getCanonicalName() + ", mustn't be native");
         }
+    }
+
+    private void maybeAddNamespace(GWT3Export gwt3Export, StringBuffer stringBuffer) {
+        if (gwt3Export != null && !gwt3Export.namespace().equals("<auto>") && !gwt3Export.name().isEmpty()) {
+            stringBuffer.append(gwt3Export.namespace()).append(".");
+        }
+    }
+
+
+    private String getTypeName(TypeElement parent) {
+        GWT3Export gwt3Export = parent.getAnnotation(GWT3Export.class);
+        if (gwt3Export != null && !gwt3Export.name().equals("<auto>") && !gwt3Export.name().isEmpty()) {
+            return parent.getAnnotation(GWT3Export.class).name();
+        }
+        return parent.getQualifiedName().toString();
     }
 
 }
