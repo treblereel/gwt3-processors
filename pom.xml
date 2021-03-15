@@ -39,15 +39,30 @@
   </scm>
 
   <properties>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
-    <maven.compiler.version>3.8.0</maven.compiler.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
+    <maven.compiler.version>3.8.0</maven.compiler.version>
+    <maven.checkstyle.plugin.version>2.17</maven.checkstyle.plugin.version>
+    <maven.deploy.plugin.version>2.8.2</maven.deploy.plugin.version>
+    <maven.release.plugin.version>2.5.3</maven.release.plugin.version>
+    <nexus.staging.maven.plugin.version>1.6.7</nexus.staging.maven.plugin.version>
+    <maven.scm.provider.gitexe.plugin.version>1.9.5</maven.scm.provider.gitexe.plugin.version>
+    <maven.fmt.plugin>2.9</maven.fmt.plugin>
+    <maven.javadoc.plugin>3.0.1</maven.javadoc.plugin>
+    <maven.source.plugin>3.0.1</maven.source.plugin>
+    <maven.gpg.plugin>1.6</maven.gpg.plugin>
+    <maven.shade.plugin>3.2.4</maven.shade.plugin>
+    <maven.license.plugin>3.0</maven.license.plugin>
+
     <com.google.elemental2.version>1.1.0</com.google.elemental2.version>
+    <com.google.jsinterop.annotations.version>2.0.0</com.google.jsinterop.annotations.version>
     <auto.common.version>0.11</auto.common.version>
     <auto.service.version>1.0-rc7</auto.service.version>
+    <commons.io.version>2.8.0</commons.io.version>
+    <junit.version>4.11</junit.version>
   </properties>
 
   <modules>
@@ -60,7 +75,7 @@
       <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
-        <version>4.11</version>
+        <version>${junit.version}</version>
         <scope>test</scope>
       </dependency>
     </dependencies>
@@ -68,7 +83,6 @@
 
   <build>
     <pluginManagement>
-
       <plugins>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -79,21 +93,40 @@
             <target>${maven.compiler.target}</target>
           </configuration>
         </plugin>
-
         <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-checkstyle-plugin</artifactId>
-          <version>2.17</version>
+          <groupId>com.coveo</groupId>
+          <artifactId>fmt-maven-plugin</artifactId>
+          <version>${maven.fmt.plugin}</version>
+        </plugin>
+        <plugin>
+          <groupId>com.mycila</groupId>
+          <artifactId>license-maven-plugin</artifactId>
+          <version>${maven.license.plugin}</version>
+          <configuration>
+            <header>LICENSE.header</header>
+            <encoding>${project.build.sourceEncoding}</encoding>
+            <skipExistingHeaders>true</skipExistingHeaders>
+            <mapping>
+              <java>SLASHSTAR_STYLE</java>
+            </mapping>
+            <excludes>
+              <exclude>**/README.md</exclude>
+              <exclude>**/LICENSE</exclude>
+              <exclude>**/LICENSE.header</exclude>
+              <exclude>**/AUTHORS</exclude>
+              <exclude>**/src/test/resources/**</exclude>
+              <exclude>**/src/main/resources/**</exclude>
+              <exclude>**/pom.xml</exclude>
+              <exclude>**/.flattened-pom.xml</exclude>
+              <exclude>**/*.js</exclude>
+            </excludes>
+            <properties>
+              <year>${project.inceptionYear}</year>
+              <name>${project.organization.name}</name>
+            </properties>
+          </configuration>
           <executions>
             <execution>
-              <id>validate</id>
-              <phase>validate</phase>
-              <configuration>
-                <encoding>UTF-8</encoding>
-                <consoleOutput>true</consoleOutput>
-                <failsOnError>true</failsOnError>
-                <configLocation>gwt-checkstyle.xml</configLocation>
-              </configuration>
               <goals>
                 <goal>check</goal>
               </goals>
@@ -102,7 +135,7 @@
         </plugin>
         <plugin>
           <artifactId>maven-deploy-plugin</artifactId>
-          <version>2.8.2</version>
+          <version>${maven.deploy.plugin.version}</version>
           <executions>
             <execution>
               <id>default-deploy</id>
@@ -116,7 +149,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-release-plugin</artifactId>
-          <version>2.5.3</version>
+          <version>${maven.release.plugin.version}</version>
           <configuration>
             <localCheckout>true</localCheckout>
             <pushChanges>false</pushChanges>
@@ -127,14 +160,14 @@
             <dependency>
               <groupId>org.apache.maven.scm</groupId>
               <artifactId>maven-scm-provider-gitexe</artifactId>
-              <version>1.9.5</version>
+              <version>${maven.scm.provider.gitexe.plugin.version}</version>
             </dependency>
           </dependencies>
         </plugin>
         <plugin>
           <groupId>org.sonatype.plugins</groupId>
           <artifactId>nexus-staging-maven-plugin</artifactId>
-          <version>1.6.7</version>
+          <version>${nexus.staging.maven.plugin.version}</version>
           <extensions>true</extensions>
           <configuration>
             <serverId>ossrh</serverId>
@@ -169,7 +202,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-source-plugin</artifactId>
-            <version>3.0.1</version>
+            <version>${maven.source.plugin}</version>
             <executions>
               <execution>
                 <id>attach-sources</id>
@@ -179,10 +212,10 @@
               </execution>
             </executions>
           </plugin>
-          <plugin>
+<!--          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-javadoc-plugin</artifactId>
-            <version>3.0.1</version>
+            <version>${maven.javadoc.plugin}</version>
             <executions>
               <execution>
                 <id>attach-javadocs</id>
@@ -191,12 +224,12 @@
                 </goals>
               </execution>
             </executions>
-          </plugin>
+          </plugin>-->
           <!-- see http://central.sonatype.org/pages/working-with-pgp-signatures.html for more detail -->
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-gpg-plugin</artifactId>
-            <version>1.6</version>
+            <version>${maven.gpg.plugin}</version>
             <executions>
               <execution>
                 <id>sign-artifacts</id>
