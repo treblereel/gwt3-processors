@@ -19,9 +19,12 @@ package org.treblereel.j2cl.processors.generator;
 import com.google.auto.common.MoreElements;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.lang.model.element.*;
-import jsinterop.annotations.JsMethod;
-import jsinterop.annotations.JsProperty;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
 import jsinterop.annotations.JsType;
 import org.treblereel.j2cl.processors.annotations.ES6Module;
 import org.treblereel.j2cl.processors.annotations.GWT3EntryPoint;
@@ -44,103 +47,12 @@ public class GWT3ExportGenerator extends AbstractGenerator {
     Set<Element> elements =
         parent.getEnclosedElements().stream()
             .filter(elm -> elm.getKind().isField() || elm.getKind().equals(ElementKind.METHOD))
-            .filter(
-                elm ->
-                    elm.getAnnotation(JsMethod.class) != null
-                        || elm.getAnnotation(JsProperty.class) != null)
             .filter(elm -> elm.getModifiers().contains(Modifier.PUBLIC))
             .collect(Collectors.toSet());
 
     elements.forEach(this::check);
 
     generate(parent, elements);
-  }
-
-  private void generate(TypeElement parent, Set<Element> elements) {
-    StringBuffer source = new StringBuffer();
-    generateClassExport(parent, source);
-    generateStaticFieldsOrMethods(parent, elements, source);
-
-    String className = parent.getSimpleName().toString();
-    String classPkg = MoreElements.getPackage(parent).getQualifiedName().toString();
-
-    writeResource(className + ".native.js", classPkg, source.toString());
-  }
-
-  private void generateStaticFieldsOrMethods(
-      TypeElement parent, Set<Element> elements, StringBuffer source) {
-    elements.stream()
-        .filter(elm -> elm.getModifiers().contains(Modifier.STATIC))
-        .forEach(
-            element -> {
-              if (element.getKind().isField()) {
-                generateStaticField((VariableElement) element, parent, source);
-              } else {
-                generateStaticMethod((ExecutableElement) element, parent, source);
-              }
-            });
-  }
-
-  private void generateStaticField(
-      VariableElement element, TypeElement parent, StringBuffer source) {
-    source.append("goog.exportProperty(_");
-    source.append(parent.getSimpleName());
-    source.append(", '");
-    source.append(element.getSimpleName());
-    source.append("', ");
-    source.append(parent.getSimpleName());
-    source.append(".$static_");
-    source.append(element.getSimpleName());
-    source.append("__");
-    source.append(parent.getQualifiedName().toString().replaceAll("\\.", "_"));
-    source.append(");");
-    source.append(System.lineSeparator());
-  }
-
-  private void generateStaticMethod(
-      ExecutableElement element, TypeElement parent, StringBuffer source) {
-    source.append("goog.exportSymbol('");
-    maybeAddNamespace(parent.getAnnotation(GWT3Export.class), source);
-    source.append(getTypeName(parent));
-    source.append(".");
-    source.append(element.getSimpleName().toString());
-    source.append("', ");
-    source.append(parent.getSimpleName());
-    source.append(".");
-    source.append(element.getSimpleName().toString());
-    source.append(");");
-    source.append(System.lineSeparator());
-  }
-
-  private void generateClassExport(TypeElement parent, StringBuffer source) {
-    source.append("const _");
-    source.append(parent.getSimpleName());
-    source.append(" = ");
-
-    if (parent.getAnnotation(JsType.class) == null) {
-      source.append(parent.getSimpleName());
-      source.append(".$create__;");
-    } else {
-      source.append(parent.getQualifiedName().toString().replaceAll("\\.", "_"));
-    }
-
-    source.append(System.lineSeparator());
-
-    source.append("goog.exportSymbol('");
-    maybeAddNamespace(parent.getAnnotation(GWT3Export.class), source);
-    source.append(getTypeName(parent));
-    source.append("', _");
-    source.append(parent.getSimpleName());
-    source.append(");");
-    source.append(System.lineSeparator());
-  }
-
-  private void check(Element element) {
-    if (element.getKind().isField()) {
-      check((VariableElement) element);
-    } else {
-      check((ExecutableElement) element);
-    }
   }
 
   private void check(TypeElement parent) {
@@ -177,6 +89,25 @@ public class GWT3ExportGenerator extends AbstractGenerator {
     }
   }
 
+  private void check(Element element) {
+    if (element.getKind().isField()) {
+      check((VariableElement) element);
+    } else {
+      check((ExecutableElement) element);
+    }
+  }
+
+  private void generate(TypeElement parent, Set<Element> elements) {
+    StringBuffer source = new StringBuffer();
+    generateClassExport(parent, source);
+    generateStaticFieldsOrMethods(parent, elements, source);
+
+    String className = parent.getSimpleName().toString();
+    String classPkg = MoreElements.getPackage(parent).getQualifiedName().toString();
+
+    writeResource(className + ".native.js", classPkg, source.toString());
+  }
+
   private void check(VariableElement field) {
     if (!field.getModifiers().contains(Modifier.PUBLIC)) {
       throw new GenerationException(
@@ -195,6 +126,44 @@ public class GWT3ExportGenerator extends AbstractGenerator {
     }
   }
 
+  private void generateClassExport(TypeElement parent, StringBuffer source) {
+    source.append("const _");
+    source.append(parent.getSimpleName());
+    source.append(" = ");
+
+    if (parent.getAnnotation(JsType.class) == null) {
+      source.append(parent.getSimpleName());
+      source.append(".$create__;");
+    } else {
+      source.append(parent.getQualifiedName().toString().replaceAll("\\.", "_"));
+    }
+
+    source.append(System.lineSeparator());
+
+    source.append("goog.exportSymbol('");
+    maybeAddNamespace(parent.getAnnotation(GWT3Export.class), source);
+    source.append(getTypeName(parent));
+    source.append("', _");
+    source.append(parent.getSimpleName());
+    source.append(");");
+    source.append(System.lineSeparator());
+  }
+
+  private void generateStaticFieldsOrMethods(
+      TypeElement parent, Set<Element> elements, StringBuffer source) {
+    elements.stream()
+        .forEach(
+            element -> {
+              if (element.getKind().isField()) {
+                if (element.getModifiers().contains(Modifier.STATIC)) {
+                  generateStaticField((VariableElement) element, parent, source);
+                }
+              } else {
+                generateMethod((ExecutableElement) element, parent, source);
+              }
+            });
+  }
+
   private void maybeAddNamespace(GWT3Export gwt3Export, StringBuffer stringBuffer) {
     if (gwt3Export != null
         && !gwt3Export.namespace().equals("<auto>")
@@ -209,5 +178,45 @@ public class GWT3ExportGenerator extends AbstractGenerator {
       return parent.getAnnotation(GWT3Export.class).name();
     }
     return parent.getQualifiedName().toString();
+  }
+
+  private void generateStaticField(
+      VariableElement element, TypeElement parent, StringBuffer source) {
+    source.append("goog.exportProperty(_");
+    source.append(parent.getSimpleName());
+    source.append(", '");
+    source.append(element.getSimpleName());
+    source.append("', ");
+    source.append(parent.getSimpleName());
+    source.append(".$static_");
+    source.append(element.getSimpleName());
+    source.append("__");
+    source.append(parent.getQualifiedName().toString().replaceAll("\\.", "_"));
+    source.append(");");
+    source.append(System.lineSeparator());
+  }
+
+  private void generateMethod(ExecutableElement element, TypeElement parent, StringBuffer source) {
+    source.append("goog.exportSymbol('");
+    maybeAddNamespace(parent.getAnnotation(GWT3Export.class), source);
+    source.append(getTypeName(parent));
+    source.append(".");
+    if (!element.getModifiers().contains(Modifier.STATIC)) {
+      source.append("prototype.");
+    }
+    source.append(element.getSimpleName().toString());
+    source.append("', ");
+    source.append(parent.getSimpleName());
+    getMethodName(element, source);
+    source.append(");");
+    source.append(System.lineSeparator());
+  }
+
+  private void getMethodName(ExecutableElement element, StringBuffer source) {
+    source.append(".");
+    if (!element.getModifiers().contains(Modifier.STATIC)) {
+      source.append("prototype.");
+    }
+    source.append(element.getSimpleName().toString());
   }
 }
