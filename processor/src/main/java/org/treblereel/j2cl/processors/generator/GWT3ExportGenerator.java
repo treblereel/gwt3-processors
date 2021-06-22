@@ -25,6 +25,8 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import jsinterop.annotations.JsMethod;
+import jsinterop.annotations.JsProperty;
 import jsinterop.annotations.JsType;
 import org.treblereel.j2cl.processors.annotations.ES6Module;
 import org.treblereel.j2cl.processors.annotations.GWT3EntryPoint;
@@ -167,6 +169,9 @@ public class GWT3ExportGenerator extends AbstractGenerator {
               if (element.getKind().isField()) {
                 if (element.getModifiers().contains(Modifier.STATIC)) {
                   generateStaticField((VariableElement) element, parent, source);
+                } else if (element.getAnnotation(JsProperty.class) == null
+                    && element.getEnclosingElement().getAnnotation(JsType.class) == null) {
+                  generateField((VariableElement) element, parent, source);
                 }
               } else {
                 generateMethod((ExecutableElement) element, parent, source);
@@ -206,6 +211,10 @@ public class GWT3ExportGenerator extends AbstractGenerator {
     source.append(System.lineSeparator());
   }
 
+  private void generateField(VariableElement element, TypeElement parent, StringBuffer source) {
+    // TODO find out how to export non-static property on non-jstyped class
+  }
+
   private void generateMethod(ExecutableElement element, TypeElement parent, StringBuffer source) {
     source.append("goog.exportSymbol('");
     maybeAddNamespace(parent.getAnnotation(GWT3Export.class), source);
@@ -227,6 +236,15 @@ public class GWT3ExportGenerator extends AbstractGenerator {
     if (!element.getModifiers().contains(Modifier.STATIC)) {
       source.append("prototype.");
     }
-    source.append(element.getSimpleName().toString());
+
+    if (element.getAnnotation(JsMethod.class) != null
+        || element.getEnclosingElement().getAnnotation(JsType.class) != null) {
+      source.append(element.getSimpleName().toString());
+    } else {
+      source.append("m_");
+      source.append(element.getSimpleName().toString());
+      source.append("__");
+      source.append(element.getReturnType().toString().replaceAll("\\.", "_"));
+    }
   }
 }
