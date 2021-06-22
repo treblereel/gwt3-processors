@@ -132,11 +132,12 @@ public class GWT3ExportGenerator extends AbstractGenerator {
     source.append(" = ");
 
     if (parent.getAnnotation(JsType.class) == null) {
-      source.append(parent.getSimpleName());
+      source.append(parent.getSimpleName().toString().replaceAll("_", "__"));
       source.append(".$create__;");
     } else {
-      source.append(parent.getQualifiedName().toString().replaceAll("\\.", "_"));
+      getNativeFullName(parent, source);
     }
+    source.append(";");
 
     source.append(System.lineSeparator());
 
@@ -147,6 +148,15 @@ public class GWT3ExportGenerator extends AbstractGenerator {
     source.append(parent.getSimpleName());
     source.append(");");
     source.append(System.lineSeparator());
+  }
+
+  private void getNativeFullName(TypeElement parent, StringBuffer source) {
+    String pkg =
+        MoreElements.getPackage(parent).getQualifiedName().toString().replaceAll("\\.", "_");
+    String clazz = parent.getSimpleName().toString().replaceAll("_", "__");
+    source.append(pkg);
+    source.append("_");
+    source.append(clazz);
   }
 
   private void generateStaticFieldsOrMethods(
@@ -187,7 +197,7 @@ public class GWT3ExportGenerator extends AbstractGenerator {
     source.append(", '");
     source.append(element.getSimpleName());
     source.append("', ");
-    source.append(parent.getSimpleName());
+    source.append(parent.getSimpleName().toString().replaceAll("_", "__"));
     source.append(".$static_");
     source.append(element.getSimpleName());
     source.append("__");
@@ -206,7 +216,7 @@ public class GWT3ExportGenerator extends AbstractGenerator {
     }
     source.append(element.getSimpleName().toString());
     source.append("', ");
-    source.append(parent.getSimpleName());
+    source.append(parent.getSimpleName().toString().replaceAll("_", "__"));
     getMethodName(element, source);
     source.append(");");
     source.append(System.lineSeparator());
