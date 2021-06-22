@@ -6,11 +6,11 @@
   <parent>
     <groupId>org.treblereel.j2cl</groupId>
     <artifactId>exports-parent-tests</artifactId>
-    <version>0.2-SNAPSHOT</version>
+    <version>0.3-SNAPSHOT</version>
   </parent>
 
   <artifactId>exports-jstype-tests</artifactId>
-  <version>0.2-SNAPSHOT</version>
+  <version>0.3-SNAPSHOT</version>
 
   <name>Exports jstype-class Tests</name>
   <description>Test cases for the Exports jstype-class</description>
@@ -93,7 +93,7 @@
         <configuration>
           <jsTestSrcDir>src/test/jasmine</jsTestSrcDir>
           <preloadSources>
-            <source>target/exports-jstype-tests-0.2-SNAPSHOT/exports-jstype-tests/exports-jstype-tests.js</source>
+            <source>target/exports-jstype-tests-0.3-SNAPSHOT/exports-jstype-tests/exports-jstype-tests.js</source>
           </preloadSources>
         </configuration>
       </plugin>
