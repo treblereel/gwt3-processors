@@ -6,7 +6,7 @@
   <parent>
     <groupId>org.treblereel.j2cl</groupId>
     <artifactId>tests-parent</artifactId>
-    <version>0.2-SNAPSHOT</version>
+    <version>0.3-SNAPSHOT</version>
   </parent>
 
   <artifactId>entrypoit-tests</artifactId>
@@ -120,7 +120,7 @@
         <configuration>
           <jsTestSrcDir>src/test/jasmine</jsTestSrcDir>
           <preloadSources>
-            <source>target/entrypoit-tests-0.2-SNAPSHOT/entrypoit-tests/entrypoit-tests.js </source>
+            <source>target/entrypoit-tests-0.3-SNAPSHOT/entrypoit-tests/entrypoit-tests.js </source>
           </preloadSources>
         </configuration>
       </plugin>
