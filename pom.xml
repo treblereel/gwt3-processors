@@ -4,7 +4,7 @@
 
   <groupId>org.treblereel.j2cl.processors</groupId>
   <artifactId>parent</artifactId>
-  <version>0.3</version>
+  <version>0.4-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>GWT3 processors parent</name>
@@ -35,7 +35,7 @@
     <url>https://github.com/treblereel/gwt3-processors</url>
     <connection>scm:git:git://github.com/treblereel/gwt3-processors.git</connection>
     <developerConnection>scm:git:git@github.com:treblereel/gwt3-processors.git</developerConnection>
-    <tag>parent-0.3</tag>
+    <tag>0.1</tag>
   </scm>
 
   <properties>
