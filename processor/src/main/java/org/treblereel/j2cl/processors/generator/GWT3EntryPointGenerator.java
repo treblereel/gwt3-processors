@@ -17,11 +17,14 @@
 package org.treblereel.j2cl.processors.generator;
 
 import com.google.auto.common.MoreElements;
+import java.util.Set;
+import java.util.stream.Collectors;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.util.ElementFilter;
 import org.treblereel.j2cl.processors.annotations.GWT3EntryPoint;
 import org.treblereel.j2cl.processors.context.AptContext;
 import org.treblereel.j2cl.processors.exception.GenerationException;
@@ -90,6 +93,29 @@ public class GWT3EntryPointGenerator extends AbstractGenerator {
               + GWT3EntryPoint.class.getCanonicalName()
               + ", must be public");
     }
+
+    Set<ExecutableElement> constructors =
+        ElementFilter.constructorsIn(clazz.getEnclosedElements()).stream()
+            .collect(Collectors.toSet());
+
+    System.out.println("constructors " + constructors.size());
+
+    if (!constructors.isEmpty()) {
+      long defaultConstructorsCount =
+          constructors.stream()
+              .filter(constructor -> constructor.getParameters().isEmpty())
+              .count();
+
+      System.out.println("defaultConstructorsCount " + defaultConstructorsCount);
+
+      if (defaultConstructorsCount != 1) {
+        throw new GenerationException(
+            "Class with method, annotated with "
+                + GWT3EntryPoint.class.getCanonicalName()
+                + ", must contain default or non-arg constructor");
+      }
+    }
+
     return methodInfo;
   }
 

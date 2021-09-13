@@ -7,6 +7,14 @@ import org.treblereel.j2cl.processors.annotations.GWT3EntryPoint;
 
 public class App {
 
+    public App() {
+
+    }
+
+    public App(String GWT3EntryPoint) {
+
+    }
+
     @GWT3EntryPoint
     public void init() {
         HTMLButtonElement btn = (HTMLButtonElement) DomGlobal.document.createElement("button");

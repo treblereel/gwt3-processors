@@ -6,11 +6,10 @@
   <parent>
     <groupId>org.treblereel.j2cl</groupId>
     <artifactId>exports-parent-tests</artifactId>
-    <version>0.3-SNAPSHOT</version>
+    <version>0.4-SNAPSHOT</version>
   </parent>
 
   <artifactId>exports-overrides-tests</artifactId>
-  <version>0.3-SNAPSHOT</version>
 
   <name>Exports overrides-jstype-class Tests</name>
   <description>Test cases for the Exports overrides-jstype-class</description>
@@ -93,7 +92,7 @@
         <configuration>
           <jsTestSrcDir>src/test/jasmine</jsTestSrcDir>
           <preloadSources>
-            <source>target/exports-overrides-tests-0.3-SNAPSHOT/exports-overrides-tests/exports-overrides-tests.js</source>
+            <source>target/exports-overrides-tests-0.4-SNAPSHOT/exports-overrides-tests/exports-overrides-tests.js</source>
           </preloadSources>
         </configuration>
       </plugin>
