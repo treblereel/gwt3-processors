@@ -41,7 +41,7 @@ public class GWT3ExportGenerator extends AbstractGenerator {
   }
 
   @Override
-  public void generate(Element element) {
+  public void generate(Element element, StringBuffer source) {
     TypeElement parent = (TypeElement) element;
 
     check(parent);
@@ -54,7 +54,7 @@ public class GWT3ExportGenerator extends AbstractGenerator {
 
     elements.forEach(this::check);
 
-    generate(parent, elements);
+    generate(parent, elements, source);
   }
 
   private void check(TypeElement parent) {
@@ -99,15 +99,9 @@ public class GWT3ExportGenerator extends AbstractGenerator {
     }
   }
 
-  private void generate(TypeElement parent, Set<Element> elements) {
-    StringBuffer source = new StringBuffer();
+  private void generate(TypeElement parent, Set<Element> elements, StringBuffer source) {
     generateClassExport(parent, source);
     generateStaticFieldsOrMethods(parent, elements, source);
-
-    String className = parent.getSimpleName().toString();
-    String classPkg = MoreElements.getPackage(parent).getQualifiedName().toString();
-
-    writeResource(className + ".native.js", classPkg, source.toString());
   }
 
   private void check(VariableElement field) {

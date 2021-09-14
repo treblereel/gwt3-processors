@@ -3,11 +3,17 @@ package org.treblereel.j2cl.exports;
 import jsinterop.annotations.JsMethod;
 import jsinterop.annotations.JsProperty;
 import jsinterop.annotations.JsType;
+import org.treblereel.j2cl.processors.annotations.GWT3EntryPoint;
 import org.treblereel.j2cl.processors.annotations.GWT3Export;
 
 @JsType
 @GWT3Export
 public class ExportTestClass {
+
+    @GWT3EntryPoint
+    public void init() {
+
+    }
 
     @JsProperty
     public static String staticProperty = "staticProperty";

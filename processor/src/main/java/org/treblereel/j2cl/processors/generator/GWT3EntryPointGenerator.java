@@ -16,7 +16,6 @@
 
 package org.treblereel.j2cl.processors.generator;
 
-import com.google.auto.common.MoreElements;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.lang.model.element.Element;
@@ -36,8 +35,8 @@ public class GWT3EntryPointGenerator extends AbstractGenerator {
   }
 
   @Override
-  public void generate(Element element) {
-    generate(checkMethod(element));
+  public void generate(Element element, StringBuffer source) {
+    generate(checkMethod(element), source);
   }
 
   private ExecutableElement checkMethod(Element target) {
@@ -98,15 +97,11 @@ public class GWT3EntryPointGenerator extends AbstractGenerator {
         ElementFilter.constructorsIn(clazz.getEnclosedElements()).stream()
             .collect(Collectors.toSet());
 
-    System.out.println("constructors " + constructors.size());
-
     if (!constructors.isEmpty()) {
       long defaultConstructorsCount =
           constructors.stream()
               .filter(constructor -> constructor.getParameters().isEmpty())
               .count();
-
-      System.out.println("defaultConstructorsCount " + defaultConstructorsCount);
 
       if (defaultConstructorsCount != 1) {
         throw new GenerationException(
@@ -119,15 +114,12 @@ public class GWT3EntryPointGenerator extends AbstractGenerator {
     return methodInfo;
   }
 
-  private void generate(ExecutableElement methodInfo) {
+  private void generate(ExecutableElement methodInfo, StringBuffer source) {
     String methodName = methodInfo.getSimpleName().toString();
     TypeElement clazz = (TypeElement) methodInfo.getEnclosingElement();
     String className = clazz.getSimpleName().toString();
-    String classPkg = MoreElements.getPackage(clazz).getQualifiedName().toString();
 
-    String source = generateNativeJsSource(methodName, className);
-
-    writeResource(className + ".native.js", classPkg, source);
+    source.append(generateNativeJsSource(methodName, className));
   }
 
   private String generateNativeJsSource(String methodName, String className) {

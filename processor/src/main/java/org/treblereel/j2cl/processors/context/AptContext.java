@@ -16,6 +16,9 @@
 
 package org.treblereel.j2cl.processors.context;
 
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,6 +26,10 @@ import java.util.List;
 import java.util.Map;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
+import javax.tools.Diagnostic;
+import javax.tools.FileObject;
+import javax.tools.StandardLocation;
+import org.treblereel.j2cl.processors.exception.GenerationException;
 import org.treblereel.j2cl.processors.generator.AbstractGenerator;
 
 public class AptContext {
@@ -57,5 +64,19 @@ public class AptContext {
 
   public List<AbstractGenerator> getRegistredGeneratorsByAnnotation(String annotation) {
     return generators.get(annotation);
+  }
+
+  public void writeResource(String filename, String path, String content) {
+    try {
+      FileObject file =
+          processingEnv.getFiler().createResource(StandardLocation.SOURCE_OUTPUT, path, filename);
+      PrintWriter pw =
+          new PrintWriter(new OutputStreamWriter(file.openOutputStream(), "UTF-8"), false);
+      pw.print(content);
+      pw.close();
+    } catch (IOException e) {
+      processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Failed to write file: " + e);
+      throw new GenerationException("Failed to write file: " + e, e);
+    }
   }
 }

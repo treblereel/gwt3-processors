@@ -35,7 +35,7 @@ public class ES6ModuleShimGenerator extends AbstractGenerator {
   }
 
   @Override
-  public void generate(Element element) {
+  public void generate(Element element, StringBuffer source) {
     JsType jsType = check(element);
     process(element, jsType);
   }
@@ -109,7 +109,7 @@ public class ES6ModuleShimGenerator extends AbstractGenerator {
     source.append(";");
     source.append(System.lineSeparator());
 
-    writeResource(typeElement.getSimpleName() + CLOSURE_JS, pkg, source.toString());
+    context.writeResource(typeElement.getSimpleName() + CLOSURE_JS, pkg, source.toString());
   }
 
   private void generateShim(TypeElement typeElement, String clazzName, String moduleFileName) {
@@ -133,6 +133,6 @@ public class ES6ModuleShimGenerator extends AbstractGenerator {
     source.append("};");
     source.append(System.lineSeparator());
 
-    writeResource(typeElement.getSimpleName() + SHIM_JS, pkg, source.toString());
+    context.writeResource(typeElement.getSimpleName() + SHIM_JS, pkg, source.toString());
   }
 }
