@@ -8,10 +8,10 @@ import org.treblereel.j2cl.processors.annotations.GWT3Export;
 @GWT3Export
 public class ExportTestClass {
 
-    @GWT3EntryPoint
-    public void init() {
+    //@GWT3EntryPoint
+/*    public void init() {
 
-    }
+    }*/
 
     @JsProperty
     public static String staticProperty = "staticProperty";
