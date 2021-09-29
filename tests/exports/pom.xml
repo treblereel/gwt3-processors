@@ -20,6 +20,7 @@
     <module>pure</module>
     <module>jstype</module>
     <module>override</module>
+    <module>interfaces</module>
   </modules>
 
   <build>
