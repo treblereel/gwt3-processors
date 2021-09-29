@@ -21,6 +21,7 @@
     <module>jstype</module>
     <module>override</module>
     <module>interfaces</module>
+    <module>interfaces2</module>
   </modules>
 
   <build>
