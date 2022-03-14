@@ -19,6 +19,7 @@ package org.treblereel.j2cl.processors.generator;
 import com.google.auto.common.MoreElements;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import javax.lang.model.element.*;
 import jsinterop.annotations.JsType;
 import org.treblereel.j2cl.processors.annotations.ES6Module;
@@ -35,6 +36,10 @@ public class ES6ModuleShimGenerator extends AbstractGenerator {
   }
 
   @Override
+  public void generate(Set<Element> elements) {
+    elements.forEach(this::generate);
+  }
+
   public void generate(Element element) {
     JsType jsType = check(element);
     process(element, jsType);

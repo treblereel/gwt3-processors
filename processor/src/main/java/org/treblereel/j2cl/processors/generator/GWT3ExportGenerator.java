@@ -41,6 +41,10 @@ public class GWT3ExportGenerator extends AbstractGenerator {
   }
 
   @Override
+  public void generate(Set<Element> elements) {
+    elements.forEach(this::generate);
+  }
+
   public void generate(Element element) {
     TypeElement parent = (TypeElement) element;
 
