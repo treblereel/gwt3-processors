@@ -57,7 +57,7 @@ public class GWT3Processor extends AbstractProcessor {
             .getRegistredGeneratorsByAnnotation(element.getQualifiedName().toString())
             .forEach(
                 generator ->
-                    roundEnv.getElementsAnnotatedWith(element).forEach(generator::generate));
+                    generator.generate((Set<Element>) roundEnv.getElementsAnnotatedWith(element)));
       }
     }
     return false;

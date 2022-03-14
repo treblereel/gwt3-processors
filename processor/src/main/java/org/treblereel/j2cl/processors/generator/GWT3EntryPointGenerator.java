@@ -17,6 +17,7 @@
 package org.treblereel.j2cl.processors.generator;
 
 import com.google.auto.common.MoreElements;
+import java.util.Set;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -33,6 +34,10 @@ public class GWT3EntryPointGenerator extends AbstractGenerator {
   }
 
   @Override
+  public void generate(Set<Element> elements) {
+    elements.forEach(this::generate);
+  }
+
   public void generate(Element element) {
     generate(checkMethod(element));
   }

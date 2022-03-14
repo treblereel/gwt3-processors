@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.lang.annotation.Annotation;
+import java.util.Set;
 import javax.lang.model.element.Element;
 import javax.tools.Diagnostic;
 import javax.tools.FileObject;
@@ -36,7 +37,7 @@ public abstract class AbstractGenerator {
     context.register(annotation, this);
   }
 
-  public abstract void generate(Element element);
+  public abstract void generate(Set<Element> elements);
 
   protected void writeResource(String filename, String path, String content) {
     try {
