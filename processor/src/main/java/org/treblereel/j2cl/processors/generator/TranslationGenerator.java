@@ -44,6 +44,68 @@ public class TranslationGenerator extends AbstractGenerator {
   }
 
   @Override
+  public void generate(Set<Element> elements) {
+    elements.forEach(this::generate);
+
+    generateTranslationServiceNativeJs(elements);
+  }
+
+  private void generateTranslationServiceNativeJs(Set<Element> elements) {
+    StringBuffer stringBuffer = new StringBuffer();
+
+    stringBuffer.append("goog.provide('org.treblereel.j2cl.processors.annotations.translation');");
+    stringBuffer.append(System.lineSeparator());
+
+    stringBuffer.append("const holder = new Map;");
+    stringBuffer.append(System.lineSeparator());
+
+    elements.forEach(
+        element -> {
+          ElementFilter.fieldsIn(element.getEnclosedElements()).stream()
+              .filter(e -> e.getAnnotation(TranslationKey.class) != null)
+              .forEach(
+                  field -> {
+                    TranslationKey translationKey = field.getAnnotation(TranslationKey.class);
+                    String key =
+                        "MSG_" + ((String) field.getConstantValue()).toUpperCase(Locale.ROOT);
+                    String defaultValue = translationKey.defaultValue();
+                    stringBuffer.append("var ");
+                    stringBuffer.append(key);
+                    stringBuffer.append(" = goog.getMsg(\"");
+                    stringBuffer.append(defaultValue);
+                    stringBuffer.append("\");");
+
+                    stringBuffer.append(System.lineSeparator());
+
+                    stringBuffer.append("holder.set(");
+                    stringBuffer.append("'" + ((String) field.getConstantValue()) + "'");
+                    stringBuffer.append(",");
+                    stringBuffer.append(key);
+                    stringBuffer.append(");");
+
+                    stringBuffer.append(System.lineSeparator());
+                  });
+        });
+    stringBuffer.append(System.lineSeparator());
+
+    stringBuffer.append(
+        "org.treblereel.j2cl.processors.annotations.translation.format = function(arg) {");
+    stringBuffer.append(System.lineSeparator());
+    stringBuffer.append(" console.log(\"format 1 \" + arg)");
+    stringBuffer.append(System.lineSeparator());
+    stringBuffer.append(" console.log(\"format 2 \" + holder.has(arg))");
+    stringBuffer.append(System.lineSeparator());
+    stringBuffer.append(" return holder.get(arg);");
+    stringBuffer.append(System.lineSeparator());
+    stringBuffer.append("}");
+    stringBuffer.append(System.lineSeparator());
+
+    writeResource(
+        "TranslationService.js",
+        "org.treblereel.j2cl.processors.annotations",
+        stringBuffer.toString());
+  }
+
   public void generate(Element elm) {
     TypeElement element = MoreElements.asType(elm);
 
