@@ -88,4 +88,17 @@ describe("@GWT3Export test suite", function() {
     expect(test.test5()).toBe('qwerty');
     expect(test.new_custome_method_name()).toBe('new_custome_method_name');
   });
+
+  it("Interface usage 1", function() {
+    var test = new org.treblereel.j2cl.exports.impl.v1_0.MyInterface();
+
+    expect(test.test1('INSTANCE METHOD CALL')).toBe('INSTANCE METHOD CALL');
+  });
+
+  it("Interface usage 2", function() {
+    var test = new org.treblereel.j2cl.exports.impl.v10.MyInterface();
+
+    expect(test.test1('INSTANCE METHOD CALL')).toBe('INSTANCE METHOD CALL');
+  });
+
 });
