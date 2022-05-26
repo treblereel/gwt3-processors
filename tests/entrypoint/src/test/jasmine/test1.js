@@ -1,5 +1,5 @@
-describe("A suite", function() {
-  it("contains spec with an expectation", function() {
+describe("@GWT3EntryPoint test suite", function() {
+  it("check app is started", function() {
     expect(window.started).toBe(true);
   });
 });
