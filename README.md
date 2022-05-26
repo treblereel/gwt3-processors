@@ -48,35 +48,28 @@ It contains the following features:
 * *@GWT3Export* allows a resulted JavaScript file to be called from the pure JavaScript environment.
   
   ```java
-  @JsType
-  @GWT3Export
   public class ExportTestClass {
   
-      @JsProperty
-      public static String staticProperty = "staticProperty";
-    
-      @JsMethod
-      public static String test2(String s) {
+      @GWT3Export
+      public static String test(String s) {
         return s;
       }
     
-      @JsProperty
-      public String id = "qwerty";
-    
-      @JsMethod
-      public String test1(String s) {
-        return s;
+      @GWT3Export
+      public Promise<String> promise() {
+        return Promise.resolve("Hello world!");
       }
   }
   ```
   ```javascript
     var test = new org.treblereel.j2cl.exports.ExportTestClass();
 
-    expect(test.test1('INSTANCE METHOD CALL')).toBe('INSTANCE METHOD CALL');
-    expect(test.id).toBe('qwerty');
+    test.test('INSTANCE METHOD CALL');
 
-    expect(org.treblereel.j2cl.exports.ExportTestClass.test2('STATIC METHOD CALL')).toBe('STATIC METHOD CALL');
-    expect(org.treblereel.j2cl.exports.ExportTestClass.staticProperty).toBe('staticProperty');
+    test.promise().then(function(result) {
+       
+    });
+  
    ```
   
 Take a look at tests for more details.

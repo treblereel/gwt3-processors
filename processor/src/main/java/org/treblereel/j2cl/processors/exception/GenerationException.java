@@ -16,6 +16,9 @@
 
 package org.treblereel.j2cl.processors.exception;
 
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
+
 public class GenerationException extends RuntimeException {
   private static final long serialVersionUID = 1L;
 
@@ -23,6 +26,16 @@ public class GenerationException extends RuntimeException {
 
   public GenerationException(String msg) {
     super(msg);
+  }
+
+  public GenerationException(TypeElement element, String message) {
+    super(String.format("%s : %s", element.toString(), message));
+  }
+
+  public GenerationException(ExecutableElement element, String message) {
+    super(
+        String.format(
+            "%s.%s : %s", element.getEnclosingElement().toString(), element.toString(), message));
   }
 
   public GenerationException(Throwable t) {

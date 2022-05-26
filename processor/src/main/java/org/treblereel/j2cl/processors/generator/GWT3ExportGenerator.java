@@ -17,16 +17,19 @@
 package org.treblereel.j2cl.processors.generator;
 
 import com.google.auto.common.MoreElements;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.ArrayType;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
 import jsinterop.annotations.JsMethod;
-import jsinterop.annotations.JsProperty;
 import jsinterop.annotations.JsType;
 import org.treblereel.j2cl.processors.annotations.ES6Module;
 import org.treblereel.j2cl.processors.annotations.GWT3EntryPoint;
@@ -42,71 +45,96 @@ public class GWT3ExportGenerator extends AbstractGenerator {
 
   @Override
   public void generate(Set<Element> elements) {
-    elements.forEach(this::generate);
+    HashMap<TypeElement, Set<ExecutableElement>> exports = new HashMap<>();
+    for (Element method : elements) {
+      TypeElement parent = (TypeElement) method.getEnclosingElement();
+      if (!exports.containsKey(parent)) {
+        exports.put(checkClazz(parent), new HashSet<>());
+      }
+      exports.get(parent).add(checkMethod(method));
+    }
+
+    exports.forEach(this::generate);
   }
 
-  public void generate(Element element) {
-    TypeElement parent = (TypeElement) element;
+  private ExecutableElement checkMethod(Element candidate) {
+    ExecutableElement method = (ExecutableElement) candidate;
 
-    check(parent);
+    if (!method.getModifiers().contains(Modifier.PUBLIC)) {
+      throw new GenerationException(
+          method,
+          "Method, annotated with " + GWT3Export.class.getCanonicalName() + ", must be public");
+    }
+    if (method.getModifiers().contains(Modifier.ABSTRACT)) {
+      throw new GenerationException(
+          method,
+          "Method, annotated with "
+              + GWT3Export.class.getCanonicalName()
+              + ", mustn't be abstract");
+    }
 
-    Set<Element> elements =
-        parent.getEnclosedElements().stream()
-            .filter(elm -> elm.getKind().isField() || elm.getKind().equals(ElementKind.METHOD))
-            .filter(elm -> elm.getModifiers().contains(Modifier.PUBLIC))
-            .collect(Collectors.toSet());
-
-    elements.forEach(this::check);
-
-    generate(parent, elements);
+    if (method.getModifiers().contains(Modifier.NATIVE)) {
+      throw new GenerationException(
+          method,
+          "Method, annotated with " + GWT3Export.class.getCanonicalName() + ", mustn't be native");
+    }
+    return method;
   }
 
-  private void check(TypeElement parent) {
+  private TypeElement checkClazz(TypeElement parent) {
+
+    if (!parent.getEnclosingElement().getKind().equals(ElementKind.PACKAGE)) {
+      throw new GenerationException(
+          parent,
+          "Class, that contains methods annotated with "
+              + GWT3Export.class.getCanonicalName()
+              + ", must be top level class");
+    }
+
     if (!parent.getModifiers().contains(Modifier.PUBLIC)) {
       throw new GenerationException(
-          "Class,  that contains methods/fields annotated with "
+          parent,
+          "Class, that contains methods annotated with "
               + GWT3Export.class.getCanonicalName()
               + ", must be public");
     }
     if (parent.getModifiers().contains(Modifier.ABSTRACT)) {
       throw new GenerationException(
-          "Class,  that contains methods/fields annotated with "
+          parent,
+          "Class,  that contains methods annotated with "
               + GWT3Export.class.getCanonicalName()
               + ", mustn't be abstract");
     }
     if (parent.getAnnotation(JsType.class) != null
         && parent.getAnnotation(JsType.class).isNative()) {
       throw new GenerationException(
-          "If Class,  that contains methods/fields annotated with "
+          parent,
+          "If Class, that contains methods annotated with "
               + GWT3Export.class.getCanonicalName()
               + ", is @JsType, it mustn't be isNative=true");
     }
     if (parent.getAnnotation(GWT3EntryPoint.class) != null) {
       throw new GenerationException(
-          "If Class,  that contains methods/fields annotated with "
+          parent,
+          "If Class,  that contains methods annotated with "
               + GWT3Export.class.getCanonicalName()
               + ", mustn't be annotated with @GWT3EntryPoint");
     }
     if (parent.getAnnotation(ES6Module.class) != null) {
       throw new GenerationException(
-          "If Class,  that contains methods/fields annotated with "
+          parent,
+          "If Class,  that contains methods annotated with "
               + GWT3Export.class.getCanonicalName()
               + ", mustn't be annotated with @ES6Module");
     }
+    return parent;
   }
 
-  private void check(Element element) {
-    if (element.getKind().isField()) {
-      check((VariableElement) element);
-    } else {
-      check((ExecutableElement) element);
-    }
-  }
+  private void generate(TypeElement parent, Set<ExecutableElement> elements) {
 
-  private void generate(TypeElement parent, Set<Element> elements) {
     StringBuffer source = new StringBuffer();
     generateClassExport(parent, source);
-    generateStaticFieldsOrMethods(parent, elements, source);
+    generateMethods(parent, elements, source);
 
     String className = parent.getSimpleName().toString();
     String classPkg = MoreElements.getPackage(parent).getQualifiedName().toString();
@@ -114,41 +142,16 @@ public class GWT3ExportGenerator extends AbstractGenerator {
     writeResource(className + ".native.js", classPkg, source.toString());
   }
 
-  private void check(VariableElement field) {
-    if (!field.getModifiers().contains(Modifier.PUBLIC)) {
-      throw new GenerationException(
-          "Field,  annotated with " + GWT3Export.class.getCanonicalName() + ", must be public");
-    }
-  }
-
-  private void check(ExecutableElement method) {
-    if (!method.getModifiers().contains(Modifier.PUBLIC)) {
-      throw new GenerationException(
-          "Method,  annotated with " + GWT3Export.class.getCanonicalName() + ", must be public");
-    }
-    if (method.getModifiers().contains(Modifier.NATIVE)) {
-      throw new GenerationException(
-          "Method,  annotated with " + GWT3Export.class.getCanonicalName() + ", mustn't be native");
-    }
+  private void generateMethods(
+      TypeElement parent, Set<ExecutableElement> elements, StringBuffer source) {
+    elements.forEach(method -> generateMethod(method, parent, source));
   }
 
   private void generateClassExport(TypeElement parent, StringBuffer source) {
-    source.append("const _");
-    source.append(parent.getSimpleName());
-    source.append(" = ");
-
-    if (parent.getAnnotation(JsType.class) == null) {
-      source.append(parent.getSimpleName().toString().replaceAll("_", "__"));
-      source.append(".$create__;");
-    } else {
-      getNativeFullName(parent, source);
-    }
-    source.append(";");
-
+    generateClassWrapper(parent, source);
     source.append(System.lineSeparator());
 
     source.append("goog.exportSymbol('");
-    maybeAddNamespace(parent.getAnnotation(GWT3Export.class), source);
     source.append(getTypeName(parent));
     source.append("', _");
     source.append(parent.getSimpleName());
@@ -156,39 +159,27 @@ public class GWT3ExportGenerator extends AbstractGenerator {
     source.append(System.lineSeparator());
   }
 
-  private void getNativeFullName(TypeElement parent, StringBuffer source) {
-    String pkg =
-        MoreElements.getPackage(parent).getQualifiedName().toString().replaceAll("\\.", "_");
-    String clazz = parent.getSimpleName().toString().replaceAll("_", "__");
-    source.append(pkg);
-    source.append("_");
-    source.append(clazz);
-  }
+  private void generateClassWrapper(TypeElement parent, StringBuffer source) {
+    source.append("class _");
+    source.append(parent.getSimpleName());
+    source.append(" extends ");
+    source.append(parent.getSimpleName().toString().replaceAll("_", "__"));
+    source.append(" {");
+    source.append(System.lineSeparator());
 
-  private void generateStaticFieldsOrMethods(
-      TypeElement parent, Set<Element> elements, StringBuffer source) {
-    elements.stream()
-        .forEach(
-            element -> {
-              if (element.getKind().isField()) {
-                if (element.getModifiers().contains(Modifier.STATIC)) {
-                  generateStaticField((VariableElement) element, parent, source);
-                } else if (element.getAnnotation(JsProperty.class) == null
-                    && element.getEnclosingElement().getAnnotation(JsType.class) == null) {
-                  generateField((VariableElement) element, parent, source);
-                }
-              } else {
-                generateMethod((ExecutableElement) element, parent, source);
-              }
-            });
-  }
-
-  private void maybeAddNamespace(GWT3Export gwt3Export, StringBuffer stringBuffer) {
-    if (gwt3Export != null
-        && !gwt3Export.namespace().equals("<auto>")
-        && !gwt3Export.name().isEmpty()) {
-      stringBuffer.append(gwt3Export.namespace()).append(".");
-    }
+    source.append("    constructor() {");
+    source.append(System.lineSeparator());
+    source.append("        super();");
+    source.append(System.lineSeparator());
+    source.append(
+        String.format(
+            "        this.$ctor__%s__();",
+            parent.getQualifiedName().toString().replaceAll("\\.", "_")));
+    source.append(System.lineSeparator());
+    source.append("    }");
+    source.append(System.lineSeparator());
+    source.append("}");
+    source.append(System.lineSeparator());
   }
 
   private String getTypeName(TypeElement parent) {
@@ -199,35 +190,20 @@ public class GWT3ExportGenerator extends AbstractGenerator {
     return parent.getQualifiedName().toString();
   }
 
-  private void generateStaticField(
-      VariableElement element, TypeElement parent, StringBuffer source) {
-    source.append("goog.exportProperty(_");
-    source.append(parent.getSimpleName());
-    source.append(", '");
-    source.append(element.getSimpleName());
-    source.append("', ");
-    source.append(parent.getSimpleName().toString().replaceAll("_", "__"));
-    source.append(".$static_");
-    source.append(element.getSimpleName());
-    source.append("__");
-    source.append(parent.getQualifiedName().toString().replaceAll("\\.", "_"));
-    source.append(");");
-    source.append(System.lineSeparator());
-  }
-
-  private void generateField(VariableElement element, TypeElement parent, StringBuffer source) {
-    // TODO find out how to export non-static property on non-jstyped class
-  }
-
   private void generateMethod(ExecutableElement element, TypeElement parent, StringBuffer source) {
     source.append("goog.exportSymbol('");
-    maybeAddNamespace(parent.getAnnotation(GWT3Export.class), source);
     source.append(getTypeName(parent));
     source.append(".");
     if (!element.getModifiers().contains(Modifier.STATIC)) {
       source.append("prototype.");
     }
-    source.append(element.getSimpleName().toString());
+
+    if (element.getAnnotation(GWT3Export.class).name().equals("<auto>")) {
+      source.append(element.getSimpleName().toString());
+    } else {
+      source.append(element.getAnnotation(GWT3Export.class).name());
+    }
+
     source.append("', ");
     source.append(parent.getSimpleName().toString().replaceAll("_", "__"));
     getMethodName(element, source);
@@ -247,8 +223,24 @@ public class GWT3ExportGenerator extends AbstractGenerator {
     } else {
       source.append("m_");
       source.append(element.getSimpleName().toString());
-      source.append("__");
-      source.append(element.getReturnType().toString().replaceAll("\\.", "_"));
+
+      if (element.getParameters().isEmpty()) {
+        source.append("__");
+      } else {
+        for (VariableElement p : element.getParameters()) {
+          TypeMirror param = erase(p.asType());
+          source.append("__");
+          if (p.asType().getKind().equals(TypeKind.ARRAY)) {
+            source.append("arrayOf_");
+            param = ((ArrayType) p.asType()).getComponentType();
+          }
+          source.append(param.toString().replaceAll("\\.", "_"));
+        }
+      }
     }
+  }
+
+  private TypeMirror erase(TypeMirror type) {
+    return context.getProcessingEnv().getTypeUtils().erasure(type);
   }
 }

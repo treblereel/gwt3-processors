@@ -6,30 +6,94 @@
   <parent>
     <groupId>org.treblereel.j2cl</groupId>
     <artifactId>tests-parent</artifactId>
-    <version>0.3-SNAPSHOT</version>
+    <version>0.4</version>
   </parent>
 
-  <artifactId>exports-parent-tests</artifactId>
-  <packaging>pom</packaging>
+  <artifactId>exports</artifactId>
 
   <name>GWTExports Tests</name>
   <description>Test cases for the GWTExports</description>
   <url>https://github.com/treblereel/gwt3-processors</url>
 
-  <modules>
-    <module>pure</module>
-    <module>jstype</module>
-    <module>override</module>
-  </modules>
+  <dependencies>
+    <dependency>
+      <groupId>org.treblereel.j2cl.processors</groupId>
+      <artifactId>annotations</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.treblereel.j2cl.processors</groupId>
+      <artifactId>processors</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.jsinterop</groupId>
+      <artifactId>jsinterop-annotations</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.google.jsinterop</groupId>
+      <artifactId>base</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.elemental2</groupId>
+      <artifactId>elemental2-dom</artifactId>
+    </dependency>
+  </dependencies>
 
   <build>
     <plugins>
+      <plugin>
+        <groupId>com.vertispan.j2cl</groupId>
+        <artifactId>j2cl-maven-plugin</artifactId>
+        <version>${maven.j2cl.plugin}</version>
+        <executions>
+          <execution>
+            <id>build-js</id>
+            <phase>process-classes</phase>
+            <goals>
+              <goal>build</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <defaultWebappDirectory>${project.build.directory}/gwt/launcherDir</defaultWebappDirectory>
+          <compilationLevel>ADVANCED</compilationLevel>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>${maven.surefire.plugin.version}</version>
+        <configuration>
+          <skipTests>true</skipTests>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-deploy-plugin</artifactId>
         <version>${maven.deploy.plugin.version}</version>
         <configuration>
           <skip>true</skip>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>com.github.searls</groupId>
+        <artifactId>jasmine-maven-plugin</artifactId>
+        <version>${maven.jasmine.plugin.version}</version>
+        <executions>
+          <execution>
+            <id>jasmine</id>
+            <goals>
+              <goal>test</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <jsTestSrcDir>src/test/jasmine</jsTestSrcDir>
+          <preloadSources>
+            <source>target/exports-${project.version}/exports/exports.js</source>
+          </preloadSources>
         </configuration>
       </plugin>
     </plugins>
