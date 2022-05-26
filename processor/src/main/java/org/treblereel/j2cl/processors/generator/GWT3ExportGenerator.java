@@ -20,6 +20,7 @@ import com.google.auto.common.MoreElements;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -29,6 +30,7 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.ElementFilter;
 import jsinterop.annotations.JsMethod;
 import jsinterop.annotations.JsType;
 import org.treblereel.j2cl.processors.annotations.ES6Module;
@@ -46,12 +48,24 @@ public class GWT3ExportGenerator extends AbstractGenerator {
   @Override
   public void generate(Set<Element> elements) {
     HashMap<TypeElement, Set<ExecutableElement>> exports = new HashMap<>();
-    for (Element method : elements) {
-      TypeElement parent = (TypeElement) method.getEnclosingElement();
-      if (!exports.containsKey(parent)) {
-        exports.put(checkClazz(parent), new HashSet<>());
+
+    for (Element element : elements) {
+      if (element.getKind().equals(ElementKind.METHOD)) {
+        TypeElement parent = (TypeElement) element.getEnclosingElement();
+        if (!exports.containsKey(parent)) {
+          exports.put(checkClazz(parent), new HashSet<>());
+        }
+        exports.get(parent).add(checkMethod(element));
+      } else if (element.getKind().isClass()) {
+        TypeElement parent = (TypeElement) element;
+        Set<ExecutableElement> methods =
+            ElementFilter.methodsIn(parent.getEnclosedElements()).stream()
+                .filter(elm -> elm.getModifiers().contains(Modifier.PUBLIC))
+                .filter(elm -> !elm.getModifiers().contains(Modifier.NATIVE))
+                .filter(elm -> !elm.getModifiers().contains(Modifier.ABSTRACT))
+                .collect(Collectors.toSet());
+        exports.put(checkClazz(parent), methods);
       }
-      exports.get(parent).add(checkMethod(method));
     }
 
     exports.forEach(this::generate);
@@ -184,10 +198,19 @@ public class GWT3ExportGenerator extends AbstractGenerator {
 
   private String getTypeName(TypeElement parent) {
     GWT3Export gwt3Export = parent.getAnnotation(GWT3Export.class);
-    if (gwt3Export != null && !gwt3Export.name().equals("<auto>") && !gwt3Export.name().isEmpty()) {
-      return parent.getAnnotation(GWT3Export.class).name();
+    String pkg = MoreElements.getPackage(parent).getQualifiedName().toString();
+    String clazz = parent.getSimpleName().toString();
+
+    if (gwt3Export != null) {
+      if (!gwt3Export.name().equals("<auto>") && !gwt3Export.name().isEmpty()) {
+        clazz = parent.getAnnotation(GWT3Export.class).name();
+      }
+      if (!gwt3Export.namespace().equals("<auto>")) {
+        pkg = gwt3Export.namespace();
+      }
     }
-    return parent.getQualifiedName().toString();
+
+    return (!pkg.isEmpty() ? pkg + "." : "") + clazz;
   }
 
   private void generateMethod(ExecutableElement element, TypeElement parent, StringBuffer source) {
@@ -198,7 +221,8 @@ public class GWT3ExportGenerator extends AbstractGenerator {
       source.append("prototype.");
     }
 
-    if (element.getAnnotation(GWT3Export.class).name().equals("<auto>")) {
+    if (element.getAnnotation(GWT3Export.class) == null
+        || element.getAnnotation(GWT3Export.class).name().equals("<auto>")) {
       source.append(element.getSimpleName().toString());
     } else {
       source.append(element.getAnnotation(GWT3Export.class).name());

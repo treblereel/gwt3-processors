@@ -23,8 +23,10 @@ import java.lang.annotation.Target;
 
 /** GWT3Export */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.METHOD})
+@Target({ElementType.TYPE, ElementType.METHOD})
 public @interface GWT3Export {
+
+  String namespace() default "<auto>";
 
   String name() default "<auto>";
 }
