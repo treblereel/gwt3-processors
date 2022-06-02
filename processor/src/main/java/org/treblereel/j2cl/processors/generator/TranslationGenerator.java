@@ -33,6 +33,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.ElementFilter;
 import javax.tools.JavaFileObject;
 import org.treblereel.j2cl.processors.annotations.TranslationBundle;
@@ -97,7 +98,6 @@ public class TranslationGenerator extends AbstractGenerator {
 
     methods.forEach(
         method -> {
-          writeMsg(sb, method);
           writeMethod(sb, method, impl);
         });
 
@@ -107,10 +107,9 @@ public class TranslationGenerator extends AbstractGenerator {
         sb.toString());
   }
 
-  private void writeMsg(StringBuilder sb, ExecutableElement method) {
+  private void writeMsg(StringBuilder sb, ExecutableElement method, JsMessage asJsMessage) {
     TranslationKey translationKey = method.getAnnotation(TranslationKey.class);
     String key = getKey(method);
-    JsMessage asJsMessage = toJsMessage(key, translationKey.defaultValue());
     String id = getId(asJsMessage);
     MessageMapping messageMapping = new MessageMapping(id, key, translationKey.defaultValue());
     defaultMessageMapping.put(key, messageMapping);
@@ -119,11 +118,22 @@ public class TranslationGenerator extends AbstractGenerator {
     sb.append(String.format("/** @desc %s */", key));
     sb.append(System.lineSeparator());
 
-    sb.append("var ");
+    sb.append("   var ");
     sb.append("MSG_" + key);
-    sb.append(" = goog.getMsg(\"");
+    sb.append(" = goog.getMsg('");
     sb.append(defaultValue);
-    sb.append("\");");
+    sb.append("'");
+
+    if (!asJsMessage.placeholders().isEmpty()) {
+      sb.append(", { ");
+      sb.append(
+          asJsMessage.placeholders().stream()
+              .map(placeholder -> placeholder + ":" + placeholder)
+              .collect(Collectors.joining(",")));
+      sb.append(" }");
+    }
+
+    sb.append(");");
     sb.append(System.lineSeparator());
   }
 
@@ -140,12 +150,20 @@ public class TranslationGenerator extends AbstractGenerator {
   }
 
   private void writeMethod(StringBuilder sb, ExecutableElement method, String impl) {
+    TranslationKey translationKey = method.getAnnotation(TranslationKey.class);
+    String key = getKey(method);
+    JsMessage asJsMessage = toJsMessage(key, translationKey.defaultValue());
     sb.append(impl);
     sb.append(".prototype.");
     sb.append(generateJsMethodName(method));
-    sb.append(" = function() {");
+    sb.append(" = function(");
+    sb.append(
+        method.getParameters().stream()
+            .map(p -> p.getSimpleName().toString())
+            .collect(Collectors.joining(",")));
+    sb.append(") {");
     sb.append(System.lineSeparator());
-
+    writeMsg(sb, method, asJsMessage);
     sb.append(String.format("  return %s;", "MSG_" + getKey(method)));
     sb.append(System.lineSeparator());
 
@@ -156,17 +174,7 @@ public class TranslationGenerator extends AbstractGenerator {
   private JsMessage toJsMessage(String k, String msg) {
     String key = "MSG_" + k;
     try {
-      JsMessage jsMessage = new JsMessage.Builder().setKey(key).setMsgText(msg).build();
-
-      System.out.println("jsMessage " + jsMessage.toString());
-
-      jsMessage.getParts().stream()
-          .forEach(
-              e -> {
-                System.out.println("   p: " + e);
-              });
-
-      return jsMessage;
+      return new JsMessage.Builder().setKey(key).setMsgText(msg).build();
     } catch (JsMessage.PlaceholderFormatException e) {
       throw new Error(e);
     }
@@ -177,6 +185,10 @@ public class TranslationGenerator extends AbstractGenerator {
     sb.append("m_");
     sb.append(method.getSimpleName());
     sb.append("__");
+    sb.append(
+        method.getParameters().stream()
+            .map(p -> "java_lang_String")
+            .collect(Collectors.joining("__")));
     return sb.toString();
   }
 
@@ -207,7 +219,12 @@ public class TranslationGenerator extends AbstractGenerator {
           sb.append(System.lineSeparator());
           sb.append("public String ");
           sb.append(method.getSimpleName().toString());
-          sb.append("() { throw exception; }");
+          sb.append("(");
+          sb.append(
+              method.getParameters().stream()
+                  .map(p -> "String " + p.getSimpleName().toString())
+                  .collect(Collectors.joining(",")));
+          sb.append(") { throw exception; }");
           sb.append(System.lineSeparator());
           sb.append(System.lineSeparator());
         });
@@ -286,6 +303,14 @@ public class TranslationGenerator extends AbstractGenerator {
               + TranslationBundle.class.getCanonicalName()
               + ", mustn't be native");
     }
+    if (!method.getParameters().isEmpty()) {
+      for (VariableElement parameter : method.getParameters()) {
+        if (!parameter.asType().toString().equals(String.class.getCanonicalName())) {
+          throw new GenerationException(method, "Method params must be Strings");
+        }
+      }
+    }
+
     return method;
   }
 
@@ -342,6 +367,9 @@ public class TranslationGenerator extends AbstractGenerator {
       this.messages = messages;
     }
 
+    private static final String PH_JS_PREFIX = "{$";
+    private static final String PH_JS_SUFFIX = "}";
+
     private String generate() {
       StringBuffer source = new StringBuffer();
       source.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
@@ -354,9 +382,33 @@ public class TranslationGenerator extends AbstractGenerator {
       for (Map.Entry<String, String> message : messages.entrySet()) {
         String key = "MSG_" + message.getKey();
         String id = defaultMessageMapping.get(message.getKey()).id;
+        JsMessage asJsMessage = toJsMessage(message.getKey(), message.getValue());
+        StringBuilder parts = new StringBuilder();
+
+        System.out.println("key = " + key);
+
+        asJsMessage.getParts().stream()
+            .map(String::valueOf)
+            .forEach(
+                p -> {
+                  System.out.println("do " + p + " " + p.indexOf(PH_JS_PREFIX));
+                  int phBegin = p.indexOf(PH_JS_PREFIX);
+                  if (phBegin == 0) {
+                    int phEnd = p.indexOf(PH_JS_SUFFIX, phBegin);
+                    String phName = p.substring(phBegin + PH_JS_PREFIX.length(), phEnd);
+                    parts.append("<ph name=\"");
+                    parts.append(phName);
+                    parts.append("\" />");
+                  } else {
+                    parts.append(p);
+                  }
+                  System.out.println("Parts " + p);
+                });
+
+        System.out.println("we add " + parts);
+
         source.append(
-            String.format(
-                "<translation id=\"%s\" key=\"%s\">%s</translation>", id, key, message.getValue()));
+            String.format("<translation id=\"%s\" key=\"%s\">%s</translation>", id, key, parts));
         source.append(System.lineSeparator());
       }
 

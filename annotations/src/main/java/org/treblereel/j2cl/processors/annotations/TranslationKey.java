@@ -28,4 +28,8 @@ public @interface TranslationKey {
   String key() default "<auto>";
 
   String defaultValue();
+
+  boolean html() default false;
+
+  boolean unescapeHtmlEntities() default false;
 }

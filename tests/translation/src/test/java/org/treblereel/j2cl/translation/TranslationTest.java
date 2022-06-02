@@ -17,6 +17,7 @@ public class TranslationTest {
 
         assertEquals("Je suppose que quelque chose s'est passé", bundle.somethingHappened());
         assertEquals("le salut", bundle.hello());
-        assertEquals("Au revoir", bundle2.bye());
+        assertEquals("Au revoir Billy !", bundle2.bye("Billy"));
+        assertEquals("Billy and Billy", bundle2.dups("Billy"));
     }
 }
