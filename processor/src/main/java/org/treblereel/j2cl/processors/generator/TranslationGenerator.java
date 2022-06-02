@@ -128,8 +128,26 @@ public class TranslationGenerator extends AbstractGenerator {
       sb.append(", { ");
       sb.append(
           asJsMessage.placeholders().stream()
-              .map(placeholder -> placeholder + ":" + placeholder)
+              .map(placeholder -> placeholder + ": _" + placeholder)
               .collect(Collectors.joining(",")));
+      sb.append(" }");
+    }
+
+    if (translationKey.html() || translationKey.unescapeHtmlEntities()) {
+      if (asJsMessage.placeholders().isEmpty()) {
+        sb.append(",{}");
+      }
+
+      sb.append(", { ");
+      if (translationKey.html()) {
+        sb.append("html: true");
+        if (translationKey.unescapeHtmlEntities()) {
+          sb.append(",");
+        }
+      }
+      if (translationKey.unescapeHtmlEntities()) {
+        sb.append("unescapeHtmlEntities: true");
+      }
       sb.append(" }");
     }
 
@@ -153,13 +171,15 @@ public class TranslationGenerator extends AbstractGenerator {
     TranslationKey translationKey = method.getAnnotation(TranslationKey.class);
     String key = getKey(method);
     JsMessage asJsMessage = toJsMessage(key, translationKey.defaultValue());
+    validatePlaceHolders(method, asJsMessage);
+
     sb.append(impl);
     sb.append(".prototype.");
     sb.append(generateJsMethodName(method));
     sb.append(" = function(");
     sb.append(
         method.getParameters().stream()
-            .map(p -> p.getSimpleName().toString())
+            .map(p -> "_" + p.getSimpleName().toString())
             .collect(Collectors.joining(",")));
     sb.append(") {");
     sb.append(System.lineSeparator());
@@ -169,6 +189,25 @@ public class TranslationGenerator extends AbstractGenerator {
 
     sb.append("}");
     sb.append(System.lineSeparator());
+  }
+
+  private void validatePlaceHolders(ExecutableElement method, JsMessage message) {
+    Set<String> methodParams =
+        method.getParameters().stream()
+            .map(p -> p.getSimpleName().toString())
+            .collect(Collectors.toSet());
+
+    Set<String> placeholders = message.placeholders().stream().collect(Collectors.toSet());
+    if (methodParams.size() != placeholders.size()) {
+      throw new GenerationException(method, "Size of placeholders and method args is not the same");
+    }
+    for (String placeholder : placeholders) {
+      if (!methodParams.contains(placeholder)) {
+        throw new GenerationException(
+            method,
+            String.format("Placeholder %s must have corresponding method arg", placeholder));
+      }
+    }
   }
 
   private JsMessage toJsMessage(String k, String msg) {
@@ -385,13 +424,10 @@ public class TranslationGenerator extends AbstractGenerator {
         JsMessage asJsMessage = toJsMessage(message.getKey(), message.getValue());
         StringBuilder parts = new StringBuilder();
 
-        System.out.println("key = " + key);
-
         asJsMessage.getParts().stream()
             .map(String::valueOf)
             .forEach(
                 p -> {
-                  System.out.println("do " + p + " " + p.indexOf(PH_JS_PREFIX));
                   int phBegin = p.indexOf(PH_JS_PREFIX);
                   if (phBegin == 0) {
                     int phEnd = p.indexOf(PH_JS_SUFFIX, phBegin);
@@ -400,13 +436,9 @@ public class TranslationGenerator extends AbstractGenerator {
                     parts.append(phName);
                     parts.append("\" />");
                   } else {
-                    parts.append(p);
+                    parts.append(escapeHtml(p));
                   }
-                  System.out.println("Parts " + p);
                 });
-
-        System.out.println("we add " + parts);
-
         source.append(
             String.format("<translation id=\"%s\" key=\"%s\">%s</translation>", id, key, parts));
         source.append(System.lineSeparator());
@@ -416,6 +448,10 @@ public class TranslationGenerator extends AbstractGenerator {
       source.append(System.lineSeparator());
       return source.toString();
     }
+  }
+
+  private String escapeHtml(String part) {
+    return part.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
   }
 
   private Map<String, Map<String, String>> processMapping(
