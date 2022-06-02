@@ -6,11 +6,11 @@
   <parent>
     <groupId>org.treblereel.j2cl</groupId>
     <artifactId>tests-parent</artifactId>
-    <version>0.3-SNAPSHOT</version>
+    <version>0.5-SNAPSHOT</version>
   </parent>
 
   <artifactId>translation</artifactId>
-  <version>0.3-SNAPSHOT</version>
+  <packaging>jar</packaging>
 
   <name>Translation Tests</name>
   <description>Test cases for the translation</description>
@@ -40,6 +40,23 @@
       <groupId>com.google.elemental2</groupId>
       <artifactId>elemental2-dom</artifactId>
     </dependency>
+    <!-- test dependencies -->
+    <dependency>
+      <groupId>com.vertispan.j2cl</groupId>
+      <artifactId>junit-annotations</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.vertispan.j2cl</groupId>
+      <artifactId>gwttestcase-emul</artifactId>
+      <classifier>sources</classifier>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.vertispan.j2cl</groupId>
+      <artifactId>junit-emul</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -48,61 +65,46 @@
         <directory>src/main/java</directory>
         <includes>
           <include>**/*.properties</include>
+          <include>**/*.xtb</include>
         </includes>
+      </resource>
+      <resource>
+        <directory>src/main/resources</directory>
       </resource>
     </resources>
     <plugins>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>${maven.compiler.plugin.version}</version>
+        <configuration>
+          <source>${maven.compiler.source}</source>
+          <target>${maven.compiler.target}</target>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>com.vertispan.j2cl</groupId>
         <artifactId>j2cl-maven-plugin</artifactId>
-        <version>${maven.j2cl.plugin}</version>
+        <version>0.20-SNAPSHOT</version>
         <executions>
           <execution>
-            <id>build-js</id>
-            <phase>process-classes</phase>
-            <goals>
-              <goal>build</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <defaultWebappDirectory>${project.build.directory}/gwt/launcherDir</defaultWebappDirectory>
-          <compilationLevel>ADVANCED</compilationLevel>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <version>${maven.surefire.plugin.version}</version>
-        <configuration>
-          <skipTests>true</skipTests>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-deploy-plugin</artifactId>
-        <version>${maven.deploy.plugin.version}</version>
-        <configuration>
-          <skip>true</skip>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>com.github.searls</groupId>
-        <artifactId>jasmine-maven-plugin</artifactId>
-        <version>${maven.jasmine.plugin.version}</version>
-        <executions>
-          <execution>
-            <id>jasmine</id>
+            <id>j2cl-test</id>
+            <phase>test</phase>
             <goals>
               <goal>test</goal>
             </goals>
           </execution>
         </executions>
         <configuration>
-          <jsTestSrcDir>src/test/jasmine</jsTestSrcDir>
-          <preloadSources>
-            <source>target/exports-jstype-tests-0.3-SNAPSHOT/exports-jstype-tests/exports-jstype-tests.js</source>
-          </preloadSources>
+          <translationsFile>
+            <auto>true</auto>
+          </translationsFile>
+          <defaultWebappDirectory>${project.build.directory}/gwt/launcherDir</defaultWebappDirectory>
+          <compilationLevel>ADVANCED</compilationLevel>
+          <defines>
+            <goog.LOCALE>fr</goog.LOCALE>
+          </defines>
         </configuration>
       </plugin>
     </plugins>

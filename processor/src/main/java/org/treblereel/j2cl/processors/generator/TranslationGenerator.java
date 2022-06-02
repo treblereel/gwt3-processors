@@ -1,5 +1,5 @@
 /*
- * Copyright © 2022
+ * Copyright © 2021
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,25 +19,30 @@ package org.treblereel.j2cl.processors.generator;
 import com.google.auto.common.MoreElements;
 import com.google.javascript.jscomp.GoogleJsMessageIdGenerator;
 import com.google.javascript.jscomp.JsMessage;
-import io.github.classgraph.ClassGraph;
-import io.github.classgraph.ScanResult;
+import com.sun.source.util.Trees;
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.net.URI;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.ElementFilter;
+import javax.tools.JavaFileObject;
 import org.treblereel.j2cl.processors.annotations.TranslationBundle;
 import org.treblereel.j2cl.processors.annotations.TranslationKey;
 import org.treblereel.j2cl.processors.context.AptContext;
+import org.treblereel.j2cl.processors.exception.GenerationException;
 
 public class TranslationGenerator extends AbstractGenerator {
 
   private final GoogleJsMessageIdGenerator idGenerator = new GoogleJsMessageIdGenerator(null);
-
-  private final Map<String, MessageMapping> defaultMessageMapping = new HashMap<>();
 
   public TranslationGenerator(AptContext context) {
     super(context, TranslationBundle.class);
@@ -45,180 +50,265 @@ public class TranslationGenerator extends AbstractGenerator {
 
   @Override
   public void generate(Set<Element> elements) {
-    elements.forEach(this::generate);
+    Map<TypeElement, Set<ExecutableElement>> beansAndMethods = new HashMap<>();
+    for (Element element : elements) {
+      TypeElement parent = checkBean(element);
+      Set<ExecutableElement> methods =
+          ElementFilter.methodsIn(element.getEnclosedElements()).stream()
+              .filter(e -> e.getAnnotation(TranslationKey.class) != null)
+              .map(elm -> check(elm))
+              .collect(Collectors.toSet());
+      beansAndMethods.put(parent, methods);
+    }
 
-    generateTranslationServiceNativeJs(elements);
+    Map<String, Map<String, String>> toMapping = new HashMap<>();
+
+    beansAndMethods.forEach(
+        (bean, methods) -> {
+          generateImpl(bean, methods);
+          generateNative(bean, methods);
+          Map<String, Set<Properties>> bundles = processBundles(bean);
+          for (Map.Entry<String, Set<Properties>> entry : bundles.entrySet()) {
+            if (!toMapping.containsKey(entry.getKey())) {
+              toMapping.put(entry.getKey(), new HashMap<>());
+            }
+            for (Properties property : entry.getValue()) {
+              Set<String> keys = property.stringPropertyNames();
+              for (String key : keys) {
+                toMapping.get(entry.getKey()).put(key, property.getProperty(key));
+              }
+            }
+          }
+        });
+
+    Map<String, Map<String, String>> propertiesMapping = processMapping(toMapping);
+    for (Map.Entry<String, Map<String, String>> entry : propertiesMapping.entrySet()) {
+      generateXTB(entry.getKey(), entry.getValue());
+    }
   }
 
-  private void generateTranslationServiceNativeJs(Set<Element> elements) {
-    StringBuffer stringBuffer = new StringBuffer();
+  private void generateNative(TypeElement bean, Set<ExecutableElement> methods) {
+    String impl = bean.getSimpleName().toString() + "Impl";
+    StringBuilder sb = new StringBuilder();
 
-    stringBuffer.append("goog.provide('org.treblereel.j2cl.processors.annotations.translation');");
-    stringBuffer.append(System.lineSeparator());
+    sb.append(System.lineSeparator());
+    sb.append(System.lineSeparator());
+    sb.append(System.lineSeparator());
 
-    stringBuffer.append("const holder = new Map;");
-    stringBuffer.append(System.lineSeparator());
-
-    elements.forEach(
-        element -> {
-          ElementFilter.fieldsIn(element.getEnclosedElements()).stream()
-              .filter(e -> e.getAnnotation(TranslationKey.class) != null)
-              .forEach(
-                  field -> {
-                    TranslationKey translationKey = field.getAnnotation(TranslationKey.class);
-                    String key =
-                        "MSG_" + ((String) field.getConstantValue()).toUpperCase(Locale.ROOT);
-                    String defaultValue = translationKey.defaultValue();
-                    stringBuffer.append("var ");
-                    stringBuffer.append(key);
-                    stringBuffer.append(" = goog.getMsg(\"");
-                    stringBuffer.append(defaultValue);
-                    stringBuffer.append("\");");
-
-                    stringBuffer.append(System.lineSeparator());
-
-                    stringBuffer.append("holder.set(");
-                    stringBuffer.append("'" + ((String) field.getConstantValue()) + "'");
-                    stringBuffer.append(",");
-                    stringBuffer.append(key);
-                    stringBuffer.append(");");
-
-                    stringBuffer.append(System.lineSeparator());
-                  });
+    methods.forEach(
+        method -> {
+          writeMsg(sb, method);
+          writeMethod(sb, method, impl);
         });
-    stringBuffer.append(System.lineSeparator());
-
-    stringBuffer.append(
-        "org.treblereel.j2cl.processors.annotations.translation.format = function(arg) {");
-    stringBuffer.append(System.lineSeparator());
-    stringBuffer.append(" console.log(\"format 1 \" + arg)");
-    stringBuffer.append(System.lineSeparator());
-    stringBuffer.append(" console.log(\"format 2 \" + holder.has(arg))");
-    stringBuffer.append(System.lineSeparator());
-    stringBuffer.append(" return holder.get(arg);");
-    stringBuffer.append(System.lineSeparator());
-    stringBuffer.append("}");
-    stringBuffer.append(System.lineSeparator());
 
     writeResource(
-        "TranslationService.js",
-        "org.treblereel.j2cl.processors.annotations",
-        stringBuffer.toString());
+        impl + ".native.js",
+        MoreElements.getPackage(bean).getQualifiedName().toString(),
+        sb.toString());
   }
 
-  public void generate(Element elm) {
-    TypeElement element = MoreElements.asType(elm);
+  private void writeMsg(StringBuilder sb, ExecutableElement method) {
+    TranslationKey translationKey = method.getAnnotation(TranslationKey.class);
+    String key = getKey(method);
+    JsMessage asJsMessage = toJsMessage(key, translationKey.defaultValue());
+    String id = getId(asJsMessage);
+    MessageMapping messageMapping = new MessageMapping(id, key, translationKey.defaultValue());
+    defaultMessageMapping.put(key, messageMapping);
 
-    List<VariableElement> fields =
-        ElementFilter.fieldsIn(element.getEnclosedElements()).stream()
-            .filter(e -> e.getAnnotation(TranslationKey.class) != null)
-            .collect(Collectors.toList());
+    String defaultValue = translationKey.defaultValue();
+    sb.append(String.format("/** @desc %s */", key));
+    sb.append(System.lineSeparator());
 
-    for (VariableElement field : fields) {
-      TranslationKey translationKey = field.getAnnotation(TranslationKey.class);
-      String key = (String) field.getConstantValue();
-      JsMessage asJsMessage = toJsMessage(key, translationKey.defaultValue());
-      String id = getId(asJsMessage);
-      MessageMapping messageMapping = new MessageMapping(id, key, translationKey.defaultValue());
-      defaultMessageMapping.put(key, messageMapping);
-    }
-
-    System.out.println("TranslationGenerator " + element.getSimpleName());
-
-    Map<String, Properties> bundles = processBundles(element);
-    Map<String, List<MessageMapping>> propertiesMapping = processMapping(bundles);
-
-    propertiesMapping.forEach(
-        (k, v) -> {
-          generateXTB(MoreElements.asType(element), k, v);
-          // generateJS(k, v);
-          v.forEach(
-              values -> {
-                System.out.println("       " + values.key + " " + values.value);
-              });
-        });
+    sb.append("var ");
+    sb.append("MSG_" + key);
+    sb.append(" = goog.getMsg(\"");
+    sb.append(defaultValue);
+    sb.append("\");");
+    sb.append(System.lineSeparator());
   }
 
-  private JsMessage toJsMessage(String k, String msg) {
-    String key = "MSG_" + k.toUpperCase(Locale.ROOT);
-    try {
-      JsMessage jsMessage = new JsMessage.Builder().setKey(key).setMsgText(msg).build();
-      return jsMessage;
-    } catch (JsMessage.PlaceholderFormatException e) {
-      throw new Error(e);
+  private String getKey(ExecutableElement method) {
+    if (!method.getAnnotation(TranslationKey.class).key().equals("<auto>")) {
+      return method.getAnnotation(TranslationKey.class).key();
     }
+
+    return method.getSimpleName().toString();
   }
 
   private String getId(JsMessage jsMessage) {
     return idGenerator.generateId(jsMessage.getKey(), jsMessage.getParts());
   }
 
-  private void generateJS(String k, List<MessageMapping> v) {}
+  private void writeMethod(StringBuilder sb, ExecutableElement method, String impl) {
+    sb.append(impl);
+    sb.append(".prototype.");
+    sb.append(generateJsMethodName(method));
+    sb.append(" = function() {");
+    sb.append(System.lineSeparator());
 
-  private void generateXTB(TypeElement type, String locale, List<MessageMapping> mapping) {
-    if (!locale.isEmpty()) {
-      String source = new XTBGenerator(locale, mapping).generate();
+    sb.append(String.format("  return %s;", "MSG_" + getKey(method)));
+    sb.append(System.lineSeparator());
 
-      writeResource(
-          type.getSimpleName() + "_" + locale + ".xtb",
-          MoreElements.getPackage(type).toString(),
-          source);
+    sb.append("}");
+    sb.append(System.lineSeparator());
+  }
+
+  private JsMessage toJsMessage(String k, String msg) {
+    String key = "MSG_" + k;
+    try {
+      JsMessage jsMessage = new JsMessage.Builder().setKey(key).setMsgText(msg).build();
+
+      System.out.println("jsMessage " + jsMessage.toString());
+
+      jsMessage.getParts().stream()
+          .forEach(
+              e -> {
+                System.out.println("   p: " + e);
+              });
+
+      return jsMessage;
+    } catch (JsMessage.PlaceholderFormatException e) {
+      throw new Error(e);
     }
   }
 
-  private Map<String, Properties> processBundles(Element element) {
-    String pkg = MoreElements.getPackage(element).getQualifiedName().toString();
-
-    try (ScanResult scanResult = new ClassGraph().enableFieldInfo().acceptPackages(pkg).scan()) {
-      return scanResult.getAllResources().stream()
-          .filter(
-              file -> {
-                String candidate = new File(file.getPath()).getName();
-                return candidate.startsWith(element.getSimpleName().toString())
-                    && candidate.endsWith(".properties");
-              })
-          .collect(
-              Collectors.toMap(
-                  file -> {
-                    String filename = new File(file.getPath()).getName();
-                    String locale =
-                        filename
-                            .replaceFirst(element.getSimpleName().toString(), "")
-                            .replace(".properties", "");
-                    if (locale.startsWith("_")) {
-                      locale = locale.replaceFirst("_", "");
-                    }
-                    return locale;
-                  },
-                  file -> {
-                    Properties prop = new Properties();
-                    try {
-                      prop.load(file.getURL().openStream());
-                      return prop;
-                    } catch (IOException e) {
-                      throw new Error(e);
-                    }
-                  }));
-    }
+  private String generateJsMethodName(ExecutableElement method) {
+    StringBuilder sb = new StringBuilder();
+    sb.append("m_");
+    sb.append(method.getSimpleName());
+    sb.append("__");
+    return sb.toString();
   }
 
-  private Map<String, List<MessageMapping>> processMapping(Map<String, Properties> bundles) {
-    Map<String, List<MessageMapping>> mapping = new HashMap<>();
+  private void generateImpl(TypeElement bean, Set<ExecutableElement> methods) {
+    String impl = bean.getSimpleName().toString() + "Impl";
+    StringBuilder sb = new StringBuilder();
+    sb.append("package ");
+    sb.append(MoreElements.getPackage(bean));
+    sb.append(";");
+    sb.append(System.lineSeparator());
+    sb.append(System.lineSeparator());
 
-    for (Map.Entry<String, Properties> bundle : bundles.entrySet()) {
-      String locale = bundle.getKey();
-      List<MessageMapping> current = new ArrayList<>();
-      mapping.put(locale, current);
+    sb.append("public class ");
+    sb.append(impl);
+    sb.append(" implements ");
+    sb.append(bean.getSimpleName().toString());
+    sb.append(" {");
+    sb.append(System.lineSeparator());
+    sb.append(System.lineSeparator());
 
-      for (Map.Entry<String, MessageMapping> entry : defaultMessageMapping.entrySet()) {
-        MessageMapping messageMapping = entry.getValue();
-        current.add(messageMapping);
-        if (bundle.getValue().containsKey(entry.getKey())) {
-          messageMapping.value = bundle.getValue().getProperty(entry.getKey());
-        }
+    sb.append(
+        "  private final UnsupportedOperationException exception = new UnsupportedOperationException(\"must be implemented by gwt3-processors\");");
+    sb.append(System.lineSeparator());
+
+    methods.forEach(
+        method -> {
+          sb.append(System.lineSeparator());
+          sb.append(System.lineSeparator());
+          sb.append("public String ");
+          sb.append(method.getSimpleName().toString());
+          sb.append("() { throw exception; }");
+          sb.append(System.lineSeparator());
+          sb.append(System.lineSeparator());
+        });
+
+    sb.append("}");
+    sb.append(System.lineSeparator());
+    sb.append(System.lineSeparator());
+
+    String name = MoreElements.getPackage(bean).getQualifiedName().toString() + "." + impl;
+    writeSource(name, sb.toString());
+  }
+
+  private Map<String, Set<Properties>> processBundles(Element element) {
+    Trees trees = Trees.instance(context.getProcessingEnv());
+    JavaFileObject sourceFile = trees.getPath(element).getCompilationUnit().getSourceFile();
+    URI uri = sourceFile.toUri();
+
+    File f = new File(uri.getPath());
+    File folder = f.getParentFile();
+
+    File[] files =
+        folder.listFiles(
+            (dir, candidate) ->
+                candidate.startsWith(element.getSimpleName().toString())
+                    && candidate.endsWith(".properties"));
+
+    Map<String, Set<Properties>> result = new HashMap<>();
+
+    if (files == null) {
+      return result;
+    }
+
+    for (File file : files) {
+      String filename = new File(file.getPath()).getName();
+      String locale =
+          filename.replaceFirst(element.getSimpleName().toString(), "").replace(".properties", "");
+      if (locale.startsWith("_")) {
+        locale = locale.replaceFirst("_", "");
+      }
+      if (!result.containsKey(locale)) {
+        result.put(locale, new HashSet<>());
+      }
+      try {
+        Properties prop = new Properties();
+        prop.load(file.toURL().openStream());
+        result.get(locale).add(prop);
+      } catch (IOException e) {
+        throw new Error(e);
       }
     }
-    return mapping;
+    return result;
+  }
+
+  private ExecutableElement check(Element elm) {
+    ExecutableElement method = (ExecutableElement) elm;
+
+    if (!method.getModifiers().contains(Modifier.PUBLIC)) {
+      throw new GenerationException(
+          method,
+          "Method, annotated with "
+              + TranslationBundle.class.getCanonicalName()
+              + ", must be public");
+    }
+    if (!method.getModifiers().contains(Modifier.ABSTRACT)) {
+      throw new GenerationException(
+          method,
+          "Method, annotated with "
+              + TranslationBundle.class.getCanonicalName()
+              + ", must be abstract");
+    }
+
+    if (method.getModifiers().contains(Modifier.NATIVE)) {
+      throw new GenerationException(
+          method,
+          "Method, annotated with "
+              + TranslationBundle.class.getCanonicalName()
+              + ", mustn't be native");
+    }
+    return method;
+  }
+
+  private TypeElement checkBean(Element elm) {
+    TypeElement parent = (TypeElement) elm;
+
+    if (!parent.getModifiers().contains(Modifier.PUBLIC)) {
+      throw new GenerationException(
+          parent,
+          "Interface that contains method annotated with "
+              + TranslationBundle.class.getCanonicalName()
+              + ", must be public");
+    }
+
+    if (!parent.getKind().isInterface()) {
+      throw new GenerationException(
+          parent,
+          "Bean that contains method annotated with "
+              + TranslationBundle.class.getCanonicalName()
+              + ", must be interface");
+    }
+
+    return parent;
   }
 
   private static class MessageMapping {
@@ -233,11 +323,21 @@ public class TranslationGenerator extends AbstractGenerator {
     }
   }
 
+  private void generateXTB(String locale, Map<String, String> mapping) {
+    if (!locale.isEmpty()) {
+      String source = new XTBGenerator(locale, mapping).generate();
+      writeResource(
+          "gwt3_message_bundle_" + locale + ".xtb",
+          "org.treblereel.j2cl.processors.translation",
+          source);
+    }
+  }
+
   private class XTBGenerator {
     private String locale;
-    private List<MessageMapping> messages;
+    private Map<String, String> messages;
 
-    private XTBGenerator(String locale, List<MessageMapping> messages) {
+    private XTBGenerator(String locale, Map<String, String> messages) {
       this.locale = locale;
       this.messages = messages;
     }
@@ -251,14 +351,12 @@ public class TranslationGenerator extends AbstractGenerator {
       source.append(String.format("<translationbundle lang=\"%s\">", locale));
       source.append(System.lineSeparator());
 
-      System.out.println("MessageMapping " + messages.size());
-
-      for (MessageMapping message : messages) {
-        String key = "MSG_" + message.key.toUpperCase(Locale.ROOT);
-        String id = defaultMessageMapping.get(message.key).id;
+      for (Map.Entry<String, String> message : messages.entrySet()) {
+        String key = "MSG_" + message.getKey();
+        String id = defaultMessageMapping.get(message.getKey()).id;
         source.append(
             String.format(
-                "<translation id=\"%s\" key=\"%s\">%s</translation>", id, key, message.value));
+                "<translation id=\"%s\" key=\"%s\">%s</translation>", id, key, message.getValue()));
         source.append(System.lineSeparator());
       }
 
@@ -267,4 +365,29 @@ public class TranslationGenerator extends AbstractGenerator {
       return source.toString();
     }
   }
+
+  private Map<String, Map<String, String>> processMapping(
+      Map<String, Map<String, String>> bundles) {
+    Map<String, Map<String, String>> mapping = new HashMap<>();
+
+    bundles
+        .keySet()
+        .forEach(
+            locale -> {
+              mapping.put(locale, new HashMap<>());
+
+              for (Map.Entry<String, MessageMapping> entry : defaultMessageMapping.entrySet()) {
+                String key = entry.getKey();
+                MessageMapping messageMapping = entry.getValue();
+                if (bundles.get(locale).containsKey(key)) {
+                  mapping.get(locale).put(key, bundles.get(locale).get(key));
+                } else {
+                  mapping.get(locale).put(key, messageMapping.value);
+                }
+              }
+            });
+    return mapping;
+  }
+
+  private final Map<String, MessageMapping> defaultMessageMapping = new HashMap<>();
 }

@@ -20,9 +20,12 @@ import org.treblereel.j2cl.processors.annotations.TranslationBundle;
 import org.treblereel.j2cl.processors.annotations.TranslationKey;
 
 @TranslationBundle
-public class MyTranslationBundle {
+public interface MyTranslationBundle {
 
     @TranslationKey(defaultValue = "I guess something happened!")
-    public static final String something_happened = "something_happened";
+    String somethingHappened();
+
+    @TranslationKey(defaultValue = "Hello", key = "greeting")
+    String hello();
 
 }

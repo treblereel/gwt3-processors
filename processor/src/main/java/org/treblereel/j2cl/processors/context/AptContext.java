@@ -24,6 +24,8 @@ import java.util.Map;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import org.treblereel.j2cl.processors.generator.AbstractGenerator;
+import org.treblereel.j2cl.processors.resource.ResourceOracle;
+import org.treblereel.j2cl.processors.resource.impl.ResourceOracleImpl;
 
 public class AptContext {
 
@@ -31,9 +33,12 @@ public class AptContext {
   private final ProcessingEnvironment processingEnv;
   private final Map<String, List<AbstractGenerator>> generators = new HashMap<>();
 
+  public final ResourceOracle resourceOracle;
+
   public AptContext(RoundEnvironment roundEnv, ProcessingEnvironment processingEnv) {
     this.roundEnv = roundEnv;
     this.processingEnv = processingEnv;
+    this.resourceOracle = new ResourceOracleImpl(this);
   }
 
   public void register(Class<? extends Annotation> annotation, AbstractGenerator generator) {
