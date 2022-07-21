@@ -22,7 +22,7 @@ import org.treblereel.j2cl.processors.annotations.TranslationKey;
 @TranslationBundle
 public interface MyTranslationBundle {
 
-    @TranslationKey(defaultValue = "I guess something happened!")
+    @TranslationKey(defaultValue = "I guess something happened!", unescapeHtmlEntities = true)
     String somethingHappened();
 
     @TranslationKey(defaultValue = "Hello", key = "greeting")
