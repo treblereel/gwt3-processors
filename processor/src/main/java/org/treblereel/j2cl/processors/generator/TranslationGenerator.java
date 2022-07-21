@@ -23,11 +23,7 @@ import com.sun.source.util.Trees;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
@@ -96,10 +92,9 @@ public class TranslationGenerator extends AbstractGenerator {
     sb.append(System.lineSeparator());
     sb.append(System.lineSeparator());
 
-    methods.forEach(
-        method -> {
-          writeMethod(sb, method, impl);
-        });
+    methods.stream()
+        .sorted(Comparator.comparing(o -> o.getSimpleName().toString()))
+        .forEach(method -> writeMethod(sb, method, impl));
 
     writeResource(
         impl + ".native.js",
@@ -415,7 +410,7 @@ public class TranslationGenerator extends AbstractGenerator {
       source.append(System.lineSeparator());
       source.append("<!DOCTYPE translationbundle SYSTEM \"translationbundle.dtd\">");
       source.append(System.lineSeparator());
-      source.append(String.format("<translationbundle lang=\"%s\">", locale));
+      source.append(String.format("<translationbundle lang=\"%s\">", locale.replaceAll("_", "-")));
       source.append(System.lineSeparator());
 
       for (Map.Entry<String, String> message : messages.entrySet()) {
@@ -436,7 +431,7 @@ public class TranslationGenerator extends AbstractGenerator {
                     parts.append(phName);
                     parts.append("\" />");
                   } else {
-                    parts.append(escapeHtml(p));
+                    parts.append(p);
                   }
                 });
         source.append(
@@ -450,30 +445,27 @@ public class TranslationGenerator extends AbstractGenerator {
     }
   }
 
-  private String escapeHtml(String part) {
-    return part.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
-  }
-
   private Map<String, Map<String, String>> processMapping(
       Map<String, Map<String, String>> bundles) {
-    Map<String, Map<String, String>> mapping = new HashMap<>();
-
-    bundles
-        .keySet()
-        .forEach(
-            locale -> {
-              mapping.put(locale, new HashMap<>());
-
-              for (Map.Entry<String, MessageMapping> entry : defaultMessageMapping.entrySet()) {
-                String key = entry.getKey();
-                MessageMapping messageMapping = entry.getValue();
-                if (bundles.get(locale).containsKey(key)) {
-                  mapping.get(locale).put(key, bundles.get(locale).get(key));
-                } else {
-                  mapping.get(locale).put(key, messageMapping.value);
-                }
-              }
-            });
+    Map<String, Map<String, String>> mapping = new TreeMap<>();
+    Set<String> keys = new TreeSet<>(bundles.keySet());
+    keys.forEach(
+        locale -> {
+          mapping.put(locale, new HashMap<>());
+          String parentLocale =
+              locale.contains("_") ? locale.substring(0, locale.lastIndexOf("_")) : "";
+          for (Map.Entry<String, MessageMapping> entry : defaultMessageMapping.entrySet()) {
+            String key = entry.getKey();
+            MessageMapping messageMapping = entry.getValue();
+            if (bundles.get(locale).containsKey(key)) {
+              mapping.get(locale).put(key, bundles.get(locale).get(key));
+            } else if (bundles.get(parentLocale).containsKey(key)) {
+              mapping.get(locale).put(key, bundles.get(parentLocale).get(key));
+            } else {
+              mapping.get(locale).put(key, messageMapping.value);
+            }
+          }
+        });
     return mapping;
   }
 
