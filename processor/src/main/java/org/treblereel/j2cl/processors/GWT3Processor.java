@@ -29,13 +29,15 @@ import org.treblereel.j2cl.processors.context.AptContext;
 import org.treblereel.j2cl.processors.generator.ES6ModuleShimGenerator;
 import org.treblereel.j2cl.processors.generator.GWT3EntryPointGenerator;
 import org.treblereel.j2cl.processors.generator.GWT3ExportGenerator;
+import org.treblereel.j2cl.processors.generator.TranslationGenerator;
 
 @AutoService(Processor.class)
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 @SupportedAnnotationTypes({
   "org.treblereel.j2cl.processors.annotations.GWT3EntryPoint",
   "org.treblereel.j2cl.processors.annotations.ES6Module",
-  "org.treblereel.j2cl.processors.annotations.GWT3Export"
+  "org.treblereel.j2cl.processors.annotations.GWT3Export",
+  "org.treblereel.j2cl.processors.annotations.TranslationBundle"
 })
 public class GWT3Processor extends AbstractProcessor {
 
@@ -50,6 +52,7 @@ public class GWT3Processor extends AbstractProcessor {
     new GWT3EntryPointGenerator(context);
     new ES6ModuleShimGenerator(context);
     new GWT3ExportGenerator(context);
+    new TranslationGenerator(context);
 
     for (TypeElement element : elements) {
       if (context.isAnnotationSupported(element.getQualifiedName().toString())) {

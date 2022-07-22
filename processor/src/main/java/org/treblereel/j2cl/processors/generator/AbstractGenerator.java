@@ -21,6 +21,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.lang.annotation.Annotation;
 import java.util.Set;
+import javax.annotation.processing.FilerException;
 import javax.lang.model.element.Element;
 import javax.tools.Diagnostic;
 import javax.tools.FileObject;
@@ -55,6 +56,18 @@ public abstract class AbstractGenerator {
           .getMessager()
           .printMessage(Diagnostic.Kind.ERROR, "Failed to write file: " + e);
       throw new GenerationException("Failed to write file: " + e, e);
+    }
+  }
+
+  protected void writeSource(String fileName, String source) {
+    try (PrintWriter out =
+        new PrintWriter(
+            context.getProcessingEnv().getFiler().createSourceFile(fileName).openWriter())) {
+      out.append(source);
+    } catch (FilerException e) {
+      throw new GenerationException(e);
+    } catch (IOException e) {
+      throw new GenerationException(e);
     }
   }
 }
