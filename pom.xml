@@ -59,6 +59,7 @@
 
     <com.google.elemental2.version>1.1.0</com.google.elemental2.version>
     <com.google.jsinterop.annotations.version>2.0.0</com.google.jsinterop.annotations.version>
+    <j2cl.version>0.10.0-3c97afeac</j2cl.version>
     <auto.common.version>0.11</auto.common.version>
     <auto.service.version>1.0-rc7</auto.service.version>
     <classgraph.version>4.8.141</classgraph.version>
@@ -69,10 +70,22 @@
   <modules>
     <module>annotations</module>
     <module>processor</module>
+      <module>utils</module>
   </modules>
 
   <dependencyManagement>
     <dependencies>
+      <dependency>
+        <groupId>com.vertispan.j2cl</groupId>
+        <artifactId>frontend-common</artifactId>
+        <version>${j2cl.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.vertispan.j2cl</groupId>
+        <artifactId>frontend-javac</artifactId>
+        <version>${j2cl.version}</version>
+      </dependency>
       <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
