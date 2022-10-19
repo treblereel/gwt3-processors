@@ -5,11 +5,10 @@
 
     <groupId>org.treblereel.j2cl</groupId>
     <artifactId>translation-default</artifactId>
-    <version>0.5.1</version>
-
+    <version>0.6-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>Translation Tests default</name>
+    <name>Translation Tests en</name>
     <description>Test cases for the translation</description>
     <url>https://github.com/treblereel/gwt3-processors</url>
 
@@ -97,6 +96,13 @@
             </resource>
         </resources>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <skipTests>true</skipTests>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>

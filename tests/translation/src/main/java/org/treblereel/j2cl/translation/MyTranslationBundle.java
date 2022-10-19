@@ -28,4 +28,7 @@ public interface MyTranslationBundle {
     @TranslationKey(defaultValue = "Hello", key = "greeting")
     String hello();
 
+    @TranslationKey(defaultValue = "defaultValue")
+    String defaultValue();
+
 }

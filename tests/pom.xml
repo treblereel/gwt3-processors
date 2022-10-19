@@ -5,7 +5,7 @@
 
   <groupId>org.treblereel.j2cl</groupId>
   <artifactId>tests-parent</artifactId>
-  <version>0.5.1</version>
+  <version>0.6-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>GWT3 processors Tests</name>
@@ -40,7 +40,7 @@
     <module>translation/pom_no_bundle.xml</module>
     <module>translation/pom.xml</module>
     <module>translation/pom_fr.xml</module>
-    <module>translation/pom_fr_nr.pom</module>
+    <module>translation/pom_fr_nr.xml</module>
     <module>resources</module>
   </modules>
 

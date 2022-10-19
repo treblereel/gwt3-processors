@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.treblereel.j2cl</groupId>
         <artifactId>tests-parent</artifactId>
-        <version>0.5.1</version>
+        <version>0.6-SNAPSHOT</version>
     </parent>
 
     <artifactId>translation-no_bundle</artifactId>
@@ -141,14 +141,6 @@
                     <defines>
                         <goog.LOCALE>br_rf</goog.LOCALE>
                     </defines>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-deploy-plugin</artifactId>
-                <version>${maven.deploy.plugin.version}</version>
-                <configuration>
-                    <skip>true</skip>
                 </configuration>
             </plugin>
         </plugins>
