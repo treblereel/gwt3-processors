@@ -19,6 +19,8 @@ package org.treblereel.j2cl.processors.generator;
 import com.google.auto.common.MoreElements;
 import com.google.javascript.jscomp.GoogleJsMessageIdGenerator;
 import com.google.javascript.jscomp.JsMessage;
+import com.google.javascript.jscomp.JsMessageVisitor;
+import com.google.javascript.jscomp.jarjar.com.google.common.collect.ImmutableList;
 import com.sun.source.util.Trees;
 import java.io.File;
 import java.io.IOException;
@@ -119,17 +121,17 @@ public class TranslationGenerator extends AbstractGenerator {
     sb.append(defaultValue);
     sb.append("'");
 
-    if (!asJsMessage.placeholders().isEmpty()) {
+    if (!asJsMessage.jsPlaceholderNames().isEmpty()) {
       sb.append(", { ");
       sb.append(
-          asJsMessage.placeholders().stream()
+          asJsMessage.jsPlaceholderNames().stream()
               .map(placeholder -> placeholder + ": _" + placeholder)
               .collect(Collectors.joining(",")));
       sb.append(" }");
     }
 
     if (translationKey.html() || translationKey.unescapeHtmlEntities()) {
-      if (asJsMessage.placeholders().isEmpty()) {
+      if (asJsMessage.jsPlaceholderNames().isEmpty()) {
         sb.append(",{}");
       }
 
@@ -192,7 +194,7 @@ public class TranslationGenerator extends AbstractGenerator {
             .map(p -> p.getSimpleName().toString())
             .collect(Collectors.toSet());
 
-    Set<String> placeholders = message.placeholders().stream().collect(Collectors.toSet());
+    Set<String> placeholders = message.jsPlaceholderNames().stream().collect(Collectors.toSet());
     if (methodParams.size() != placeholders.size()) {
       throw new GenerationException(method, "Size of placeholders and method args is not the same");
     }
@@ -208,7 +210,8 @@ public class TranslationGenerator extends AbstractGenerator {
   private JsMessage toJsMessage(String k, String msg) {
     String key = "MSG_" + k;
     try {
-      return new JsMessage.Builder().setKey(key).setMsgText(msg).build();
+      ImmutableList<JsMessage.Part> parts = JsMessageVisitor.parseJsMessageTextIntoParts(msg);
+      return new JsMessage.Builder().setKey(key).setId(key).appendParts(parts).build();
     } catch (JsMessage.PlaceholderFormatException e) {
       throw new Error(e);
     }
@@ -401,9 +404,6 @@ public class TranslationGenerator extends AbstractGenerator {
       this.messages = messages;
     }
 
-    private static final String PH_JS_PREFIX = "{$";
-    private static final String PH_JS_SUFFIX = "}";
-
     private String generate() {
       StringBuffer source = new StringBuffer();
       source.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
@@ -419,21 +419,17 @@ public class TranslationGenerator extends AbstractGenerator {
         JsMessage asJsMessage = toJsMessage(message.getKey(), message.getValue());
         StringBuilder parts = new StringBuilder();
 
-        asJsMessage.getParts().stream()
-            .map(String::valueOf)
-            .forEach(
-                p -> {
-                  int phBegin = p.indexOf(PH_JS_PREFIX);
-                  if (phBegin == 0) {
-                    int phEnd = p.indexOf(PH_JS_SUFFIX, phBegin);
-                    String phName = p.substring(phBegin + PH_JS_PREFIX.length(), phEnd);
-                    parts.append("<ph name=\"");
-                    parts.append(phName);
-                    parts.append("\" />");
-                  } else {
-                    parts.append(p);
-                  }
-                });
+        for (int i = 0; i < asJsMessage.getParts().size(); i++) {
+          JsMessage.Part part = asJsMessage.getParts().get(i);
+          if (part.isPlaceholder()) {
+            String placeholder = part.getCanonicalPlaceholderName();
+            parts.append("<ph name=\"");
+            parts.append(placeholder);
+            parts.append("\" />");
+          } else {
+            parts.append(part.getString());
+          }
+        }
         source.append(
             String.format("<translation id=\"%s\" key=\"%s\">%s</translation>", id, key, parts));
         source.append(System.lineSeparator());
@@ -457,9 +453,10 @@ public class TranslationGenerator extends AbstractGenerator {
           for (Map.Entry<String, MessageMapping> entry : defaultMessageMapping.entrySet()) {
             String key = entry.getKey();
             MessageMapping messageMapping = entry.getValue();
-            if (bundles.get(locale).containsKey(key)) {
+            if (bundles.containsKey(locale) && bundles.get(locale).containsKey(key)) {
               mapping.get(locale).put(key, bundles.get(locale).get(key));
-            } else if (bundles.get(parentLocale).containsKey(key)) {
+            } else if (bundles.containsKey(parentLocale)
+                && bundles.get(parentLocale).containsKey(key)) {
               mapping.get(locale).put(key, bundles.get(parentLocale).get(key));
             } else {
               mapping.get(locale).put(key, messageMapping.value);

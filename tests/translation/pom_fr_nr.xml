@@ -9,10 +9,10 @@
         <version>0.6-SNAPSHOT</version>
     </parent>
 
-    <artifactId>translation-fr</artifactId>
+    <artifactId>translation-fr-nr</artifactId>
     <packaging>jar</packaging>
 
-    <name>Translation Tests fr</name>
+    <name>Translation Tests fr-nr</name>
     <description>Test cases for the translation</description>
     <url>https://github.com/treblereel/gwt3-processors</url>
 
@@ -110,7 +110,7 @@
                     <defaultWebappDirectory>${project.build.directory}/gwt/launcherDir</defaultWebappDirectory>
                     <compilationLevel>ADVANCED</compilationLevel>
                     <defines>
-                        <goog.LOCALE>fr</goog.LOCALE>
+                        <goog.LOCALE>fr-nr</goog.LOCALE>
                     </defines>
                 </configuration>
             </plugin>

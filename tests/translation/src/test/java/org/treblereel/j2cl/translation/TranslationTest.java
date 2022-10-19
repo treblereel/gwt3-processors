@@ -25,11 +25,18 @@ public class TranslationTest {
     public void hello() {
         if (System.getProperty("goog.LOCALE").equals("fr")) {
             assertEquals("le salut", bundle.hello());
-        } else if(System.getProperty("goog.LOCALE").equals("fr-nr")){
+        } else if(System.getProperty("goog.LOCALE").equals("fr-nr")) {
             assertEquals("NR : le salut", bundle.hello());
-        } else {
+        } else if (System.getProperty("goog.LOCALE").startsWith("br_rf")) {
             assertEquals("Hello", bundle.hello());
+        } else {
+            assertEquals("greeting", bundle.hello());
         }
+    }
+
+    @Test
+    public void defaultValue() {
+        assertEquals("defaultValue", bundle.defaultValue());
     }
 
     @Test
@@ -64,23 +71,23 @@ public class TranslationTest {
 
     @Test
     public void htmlContent() {
-        if (System.getProperty("goog.LOCALE").startsWith("fr")) {
-            assertEquals("&lt;div class=&quot;blob-code blob-code-inner js-file-line&quot; id=&quot;LC1813&quot;&gt;&lt;span class=&quot;pl-c&quot;&gt;<div>HELLo</div>&lt;/span&gt;&lt;/div&gt;",
+        if (System.getProperty("goog.LOCALE").startsWith("br_rf")) {
+            // YEAH, j2cl-m-p force escaping of html entities
+            assertEquals("<div id=\"LC1813\" class=\"blob-code blob-code-inner js-file-line\"><span class=\"pl-c\"><div>HELLo</div></span></div>",
                     bundle2.htmlContent("<div>HELLo</div>"));
         } else {
-            //no translation has been done for htmlContent, so the default value is returned
-            assertEquals("<div id=\"LC1813\" class=\"blob-code blob-code-inner js-file-line\"><span class=\"pl-c\"><div>HELLo</div></span></div>",
+            assertEquals("&lt;div class=&quot;blob-code blob-code-inner js-file-line&quot; id=&quot;LC1813&quot;&gt;&lt;span class=&quot;pl-c&quot;&gt;<div>HELLo</div>&lt;/span&gt;&lt;/div&gt;",
                     bundle2.htmlContent("<div>HELLo</div>"));
         }
     }
 
     @Test
     public void htmlContentHtmlTrue() {
-        if (System.getProperty("goog.LOCALE").startsWith("fr")) {
-            assertEquals("&lt;div class=&quot;blob-code blob-code-inner js-file-line&quot; id=&quot;LC1813&quot;&gt;&lt;span class=&quot;pl-c&quot;&gt;<div>HELLo</div>&lt;/span&gt;&lt;/div&gt;",
-                bundle2.htmlContentHtmlTrue("<div>HELLo</div>"));
-        } else {
+        if (System.getProperty("goog.LOCALE").startsWith("br_rf")) {
             assertEquals("&lt;div id=\"LC1813\" class=\"blob-code blob-code-inner js-file-line\">&lt;span class=\"pl-c\"><div>HELLo</div>&lt;/span>&lt;/div>",
+                    bundle2.htmlContentHtmlTrue("<div>HELLo</div>"));
+        } else {
+            assertEquals("&lt;div class=&quot;blob-code blob-code-inner js-file-line&quot; id=&quot;LC1813&quot;&gt;&lt;span class=&quot;pl-c&quot;&gt;<div>HELLo</div>&lt;/span&gt;&lt;/div&gt;",
                     bundle2.htmlContentHtmlTrue("<div>HELLo</div>"));
         }
     }
@@ -89,21 +96,23 @@ public class TranslationTest {
     public void htmlContentUnescapeHtmlEntitiesTrue() {
         if (System.getProperty("goog.LOCALE").startsWith("fr")) {
             assertEquals("<div class=\"blob-code blob-code-inner js-file-line\" id=\"LC1813\"><span class=\"pl-c\"> * Messages must be initialized in the form:</span></div>",
-                bundle2.htmlContentUnescapeHtmlEntitiesTrue(" * Messages must be initialized in the form:"));
+                    bundle2.htmlContentUnescapeHtmlEntitiesTrue(" * Messages must be initialized in the form:"));
+        } else if (System.getProperty("goog.LOCALE").startsWith("br_rf")) {
+            assertEquals("<div id=\"LC1813\" class=\"blob-code blob-code-inner js-file-line\"><span class=\"pl-c\">br_rf</span></div>",
+                    bundle2.htmlContentUnescapeHtmlEntitiesTrue("br_rf"));
         } else {
-            assertEquals("<div id=\"LC1813\" class=\"blob-code blob-code-inner js-file-line\"><span class=\"pl-c\"> * Messages must be initialized in the form:</span></div>",
+            assertEquals("<div class=\"blob-code blob-code-inner js-file-line\" id=\"LC1813\"><span class=\"pl-c\"> * Messages must be initialized in the form:</span></div>",
                     bundle2.htmlContentUnescapeHtmlEntitiesTrue(" * Messages must be initialized in the form:"));
         }
     }
 
     @Test
     public void htmlContentHtmlTrueUnescapeHtmlEntitiesTrue() {
-        if (System.getProperty("goog.LOCALE").startsWith("fr")) {
-            assertEquals("<div class=\"blob-code blob-code-inner js-file-line\" id=\"LC1813\"><span class=\"pl-c\"> * Messages must be initialized in the form:</span></div>",
-                    bundle2.htmlContentHtmlTrueUnescapeHtmlEntitiesTrue(" * Messages must be initialized in the form:"));
+        if (System.getProperty("goog.LOCALE").startsWith("br_rf")) {
+            assertEquals("<div id=\"LC1813\" class=\"blob-code blob-code-inner js-file-line\"><span class=\"pl-c\">br_rf</span></div>",
+                    bundle2.htmlContentHtmlTrueUnescapeHtmlEntitiesTrue("br_rf"));
         } else {
-            //default value
-            assertEquals("<div id=\"LC1813\" class=\"blob-code blob-code-inner js-file-line\"><span class=\"pl-c\"> * Messages must be initialized in the form:</span></div>",
+            assertEquals("<div class=\"blob-code blob-code-inner js-file-line\" id=\"LC1813\"><span class=\"pl-c\"> * Messages must be initialized in the form:</span></div>",
                     bundle2.htmlContentHtmlTrueUnescapeHtmlEntitiesTrue(" * Messages must be initialized in the form:"));
         }
     }

@@ -5,7 +5,7 @@
 
   <groupId>org.treblereel.j2cl</groupId>
   <artifactId>tests-parent</artifactId>
-  <version>0.5</version>
+  <version>0.6-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>GWT3 processors Tests</name>
@@ -19,7 +19,7 @@
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
 
-    <maven.j2cl.plugin>0.20</maven.j2cl.plugin>
+    <maven.j2cl.plugin>0.21-SNAPSHOT</maven.j2cl.plugin>
     <maven.surefire.plugin.version>2.17</maven.surefire.plugin.version>
     <maven.deploy.plugin.version>2.8.2</maven.deploy.plugin.version>
     <maven.jasmine.plugin.version>3.0-beta-02</maven.jasmine.plugin.version>
@@ -32,15 +32,6 @@
     <j2cl.version>0.10.0-3c97afeac</j2cl.version>
 
   </properties>
-
-  <modules>
-    <module>es6shim</module>
-    <module>entrypoint</module>
-    <module>exports</module>
-    <module>translation/pom.xml</module>
-    <module>translation/pom_fr.xml</module>
-    <module>translation/pom_fr_nr.pom</module>
-  </modules>
 
   <dependencyManagement>
     <dependencies>
@@ -109,7 +100,25 @@
           <skip>true</skip>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>com.vertispan.j2cl</groupId>
+        <artifactId>j2cl-maven-plugin</artifactId>
+        <version>${maven.j2cl.plugin}</version>
+        <configuration>
+          <webappDirectory>${project.build.directory}/webapp</webappDirectory>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
+
+  <modules>
+<!--    <module>es6shim</module>
+    <module>entrypoint</module>
+    <module>exports</module>-->
+    <module>translation/pom_no_bundle.xml</module>
+    <module>translation/pom.xml</module>
+    <module>translation/pom_fr.xml</module>
+    <module>translation/pom_fr_nr.xml</module>
+  </modules>
 
 </project>
