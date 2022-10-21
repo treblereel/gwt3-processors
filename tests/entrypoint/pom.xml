@@ -6,10 +6,9 @@
   <groupId>org.treblereel.j2cl</groupId>
   <artifactId>entrypoit-tests</artifactId>
   <version>0.6-SNAPSHOT</version>
-  <packaging>jar</packaging>
 
-  <name>GWT3ENTRYPOINT Tests</name>
-  <description>Test cases for the GWT3ENTRYPOINT</description>
+  <name>GWT3 Entry Point Tests</name>
+  <description>Test cases for the GWT3 Entry Point</description>
   <url>https://github.com/treblereel/gwt3-processors</url>
 
   <properties>
