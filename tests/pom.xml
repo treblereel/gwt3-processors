@@ -112,9 +112,9 @@
   </build>
 
   <modules>
-<!--    <module>es6shim</module>
+    <module>es6shim</module>
     <module>entrypoint</module>
-    <module>exports</module>-->
+    <module>exports</module>
     <module>translation/pom_no_bundle.xml</module>
     <module>translation/pom.xml</module>
     <module>translation/pom_fr.xml</module>

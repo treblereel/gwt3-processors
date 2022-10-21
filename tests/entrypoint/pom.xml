@@ -9,7 +9,7 @@
     <version>0.6-SNAPSHOT</version>
   </parent>
 
-  <artifactId>entrypoit-tests</artifactId>
+  <artifactId>entrypoint-tests</artifactId>
 
   <name>GWT3ENTRYPOINT Tests</name>
   <description>Test cases for the GWT3ENTRYPOINT</description>
@@ -120,7 +120,7 @@
         <configuration>
           <jsTestSrcDir>src/test/jasmine</jsTestSrcDir>
           <preloadSources>
-            <source>target/entrypoit-tests-${project.version}/entrypoit-tests/entrypoit-tests.js </source>
+            <source>target/webapp/entrypoint-tests/entrypoint-tests.js</source>
           </preloadSources>
         </configuration>
       </plugin>

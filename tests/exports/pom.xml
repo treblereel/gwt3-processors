@@ -101,7 +101,7 @@
         <configuration>
           <jsTestSrcDir>src/test/jasmine</jsTestSrcDir>
           <preloadSources>
-            <source>target/exports-${project.version}/exports/exports.js</source>
+            <source>target/webapp/exports/exports.js</source>
           </preloadSources>
         </configuration>
       </plugin>
