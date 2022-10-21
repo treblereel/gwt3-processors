@@ -99,27 +99,36 @@ public class GWT3EntryPointGenerator extends AbstractGenerator {
   }
 
   private void generate(ExecutableElement methodInfo) {
-    String methodName = methodInfo.getSimpleName().toString();
     TypeElement clazz = (TypeElement) methodInfo.getEnclosingElement();
+    boolean isJsType = utils.createTypeDescriptor(clazz.asType()).isJsType();
+    String methodName = utils.createDeclarationMethodDescriptor(methodInfo).getMangledName();
     String className = clazz.getSimpleName().toString();
     String classPkg = MoreElements.getPackage(clazz).getQualifiedName().toString();
 
-    String source = generateNativeJsSource(methodName, className);
+    String source = generateNativeJsSource(methodName, className, isJsType);
 
     writeResource(className + ".native.js", classPkg, source);
   }
 
-  private String generateNativeJsSource(String methodName, String className) {
+  private String generateNativeJsSource(String methodName, String className, boolean isJsType) {
     StringBuffer source = new StringBuffer();
     source.append("setTimeout(function(){");
     source.append(System.lineSeparator());
     source.append("var ep = ");
-    source.append(className);
-    source.append(".$create__();");
+
+    if (isJsType) {
+      source.append("new ");
+      source.append(className);
+      source.append("();");
+    } else {
+      source.append(className);
+      source.append(".$create__();");
+    }
+
     source.append(System.lineSeparator());
-    source.append("    ep.m_");
+    source.append("    ep.");
     source.append(methodName);
-    source.append("__()");
+    source.append("()");
     source.append(System.lineSeparator());
     source.append("}, 0);");
     source.append(System.lineSeparator());
