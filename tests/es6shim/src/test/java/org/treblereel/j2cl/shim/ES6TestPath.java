@@ -7,8 +7,7 @@ import org.treblereel.j2cl.processors.annotations.ES6Module;
 @JsType(isNative = true, namespace = "org.treblereel.j2cl.shim")
 public class ES6TestPath {
 
-    public String id;
+  public String id;
 
-    public native boolean isES6TestPath();
-
+  public native boolean isES6TestPath();
 }
