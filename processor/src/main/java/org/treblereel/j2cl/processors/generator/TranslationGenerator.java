@@ -169,10 +169,11 @@ public class TranslationGenerator extends AbstractGenerator {
     String key = getKey(method);
     JsMessage asJsMessage = toJsMessage(key, translationKey.defaultValue());
     validatePlaceHolders(method, asJsMessage);
+    String jsMethodName =  utils.createDeclarationMethodDescriptor(method).getMangledName();
 
     sb.append(impl);
     sb.append(".prototype.");
-    sb.append(generateJsMethodName(method));
+    sb.append(jsMethodName);
     sb.append(" = function(");
     sb.append(
         method.getParameters().stream()
@@ -215,18 +216,6 @@ public class TranslationGenerator extends AbstractGenerator {
     } catch (JsMessage.PlaceholderFormatException e) {
       throw new Error(e);
     }
-  }
-
-  private String generateJsMethodName(ExecutableElement method) {
-    StringBuilder sb = new StringBuilder();
-    sb.append("m_");
-    sb.append(method.getSimpleName());
-    sb.append("__");
-    sb.append(
-        method.getParameters().stream()
-            .map(p -> "java_lang_String")
-            .collect(Collectors.joining("__")));
-    return sb.toString();
   }
 
   private void generateImpl(TypeElement bean, Set<ExecutableElement> methods) {
