@@ -17,6 +17,7 @@ package org.treblereel.j2cl.processors.utils;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.sun.tools.javac.code.Type.*;
 
 import com.google.auto.common.MoreElements;
 import com.google.auto.common.MoreTypes;
@@ -24,12 +25,14 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Streams;
 import com.google.j2cl.common.InternalCompilerError;
 import com.google.j2cl.transpiler.ast.ArrayTypeDescriptor;
+import com.google.j2cl.transpiler.ast.AstUtils;
 import com.google.j2cl.transpiler.ast.DeclaredTypeDescriptor;
 import com.google.j2cl.transpiler.ast.FieldDescriptor;
 import com.google.j2cl.transpiler.ast.JsEnumInfo;
 import com.google.j2cl.transpiler.ast.JsInfo;
 import com.google.j2cl.transpiler.ast.JsMemberType;
 import com.google.j2cl.transpiler.ast.Kind;
+import com.google.j2cl.transpiler.ast.MemberDescriptor;
 import com.google.j2cl.transpiler.ast.MethodDescriptor;
 import com.google.j2cl.transpiler.ast.MethodDescriptor.ParameterDescriptor;
 import com.google.j2cl.transpiler.ast.PrimitiveTypes;
@@ -40,8 +43,14 @@ import com.google.j2cl.transpiler.ast.TypeVariable;
 import com.google.j2cl.transpiler.ast.Visibility;
 import com.google.j2cl.transpiler.frontend.javac.JsInteropAnnotationUtils;
 import com.google.j2cl.transpiler.frontend.javac.JsInteropUtils;
+import com.sun.tools.javac.code.Attribute;
+import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.code.TargetType;
+import com.sun.tools.javac.code.Type;
+import com.sun.tools.javac.code.TypeAnnotationPosition;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.AnnotatedConstruct;
@@ -80,11 +89,6 @@ public class J2CLUtils {
     this.types = processingEnv.getTypeUtils();
     this.elements = processingEnv.getElementUtils();
     this.processingEnv = processingEnv;
-  }
-
-  private static TypeDescriptor applyParameterNullabilityAnnotations(
-      TypeDescriptor typeDescriptor, ExecutableElement declarationMethodElement, int index) {
-    return typeDescriptor;
   }
 
   public static boolean hasJsMemberAnnotation(ExecutableElement method) {
@@ -280,7 +284,6 @@ public class J2CLUtils {
     }
 
     boolean isFromSource = false;
-
     // Compute these first since they're reused in other calculations.
     String packageName = getPackageOf(typeElement).getQualifiedName().toString();
     boolean isAbstract = isAbstract(typeElement) && !isInterface(typeElement);
@@ -338,16 +341,17 @@ public class J2CLUtils {
         .setLocal(isLocal(typeElement))
         .setSimpleJsName(getJsName(typeElement))
         .setCustomizedJsNamespace(getJsNamespace(typeElement))
-        // .setNullMarked(isNullMarked)
+        .setNullMarked(isNullMarked)
         .setPackageName(packageName)
-        /*                .setSuperTypeDescriptorFactory(
-        () ->
+        .setSuperTypeDescriptorFactory(
+            () ->
                 (DeclaredTypeDescriptor)
-                        applyNullabilityAnnotations(
-                                createDeclaredTypeDescriptor(typeElement.getSuperclass(), isNullMarked),
-                                typeElement,
-                                position ->
-                                        position.type == TargetType.CLASS_EXTENDS && position.type_index == -1))*/ .setTypeParameterDescriptors(
+                    applyNullabilityAnnotations(
+                        createDeclaredTypeDescriptor(typeElement.getSuperclass(), isNullMarked),
+                        typeElement,
+                        position ->
+                            position.type == TargetType.CLASS_EXTENDS && position.type_index == -1))
+        .setTypeParameterDescriptors(
             typeParameterElements.stream()
                 .map(TypeParameterElement::asType)
                 .map(javax.lang.model.type.TypeVariable.class::cast)
@@ -365,6 +369,98 @@ public class J2CLUtils {
     DeclaredTypeDescriptor enclosingTypeDescriptor =
         createDeclaredTypeDescriptor(methodElement.getEnclosingElement().asType());
     return createDeclarationMethodDescriptor(methodElement, enclosingTypeDescriptor);
+  }
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////
+  // Utility methods to process nullability annotations on classes that are compiled separately.
+  // Javac does not present TYPE_USE annotation in the returned type instances.
+  private static TypeDescriptor applyParameterNullabilityAnnotations(
+      TypeDescriptor typeDescriptor, ExecutableElement declarationMethodElement, int index) {
+    return applyNullabilityAnnotations(
+        typeDescriptor,
+        declarationMethodElement,
+        position ->
+            position.parameter_index == index
+                && position.type == TargetType.METHOD_FORMAL_PARAMETER);
+  }
+
+  private static TypeDescriptor applyNullabilityAnnotations(
+      TypeDescriptor typeDescriptor,
+      Element declarationMethodElement,
+      Predicate<TypeAnnotationPosition> positionSelector) {
+    List<Attribute.TypeCompound> methodAnnotations =
+        ((Symbol) declarationMethodElement).getRawTypeAttributes();
+    for (Attribute.TypeCompound methodAnnotation : methodAnnotations) {
+      TypeAnnotationPosition position = methodAnnotation.getPosition();
+      if (!positionSelector.test(position)) {
+        continue;
+      }
+      if (isNonNullAnnotation(methodAnnotation)) {
+        typeDescriptor =
+            applyNullabilityAnnotation(typeDescriptor, position.location, /* isNullable= */ false);
+      } else if (isNullableAnnotation(methodAnnotation)) {
+        typeDescriptor =
+            applyNullabilityAnnotation(typeDescriptor, position.location, /* isNullable= */ true);
+      }
+    }
+
+    return typeDescriptor;
+  }
+
+  private static TypeDescriptor applyNullabilityAnnotation(
+      TypeDescriptor typeDescriptor,
+      List<TypeAnnotationPosition.TypePathEntry> location,
+      boolean isNullable) {
+    if (location.isEmpty()) {
+      if (TypeDescriptors.isJavaLangVoid(typeDescriptor)) {
+        return typeDescriptor;
+      }
+      return isNullable ? typeDescriptor.toNullable() : typeDescriptor.toNonNullable();
+    }
+    TypeAnnotationPosition.TypePathEntry currentEntry = location.get(0);
+    List<TypeAnnotationPosition.TypePathEntry> rest = location.subList(1, location.size());
+    switch (currentEntry.tag) {
+      case TYPE_ARGUMENT:
+        DeclaredTypeDescriptor declaredTypeDescriptor = (DeclaredTypeDescriptor) typeDescriptor;
+        List<TypeDescriptor> replacements =
+            new ArrayList<>(declaredTypeDescriptor.getTypeArgumentDescriptors());
+        if (currentEntry.arg < replacements.size()) {
+          // Only apply the type argument annotation if the type is not raw.
+          replacements.set(
+              currentEntry.arg,
+              applyNullabilityAnnotation(replacements.get(currentEntry.arg), rest, isNullable));
+        }
+        return DeclaredTypeDescriptor.Builder.from(declaredTypeDescriptor)
+            .setTypeArgumentDescriptors(replacements)
+            .build();
+      case ARRAY:
+        ArrayTypeDescriptor arrayTypeDescriptor = (ArrayTypeDescriptor) typeDescriptor;
+        return ArrayTypeDescriptor.newBuilder()
+            .setComponentTypeDescriptor(
+                applyNullabilityAnnotation(
+                    arrayTypeDescriptor.getComponentTypeDescriptor(), rest, isNullable))
+            .setNullable(typeDescriptor.isNullable())
+            .build();
+      case INNER_TYPE:
+        /*        DeclaredTypeDescriptor innerType = (DeclaredTypeDescriptor) typeDescriptor;
+        // Consume all inner type annotation and only continue if does not relate to an outer type
+        // of the type in question.
+        int innerDepth = getInnerDepth(innerType);
+        int innerCount = countInner(rest) + 1;
+        if (innerCount != innerDepth) {
+          // Applies to outer type, not relevant for nullability, ignore.
+          return innerType;
+        }
+        return applyNullabilityAnnotation(
+                typeDescriptor, rest.subList(innerCount - 1, rest.size()), isNullable);*/
+        throw new UnsupportedOperationException("Not implemented yet");
+      case WILDCARD:
+        TypeVariable typeVariable = (TypeVariable) typeDescriptor;
+        return TypeVariable.createWildcardWithUpperBound(
+            applyNullabilityAnnotation(
+                typeVariable.getUpperBoundTypeDescriptor(), rest, isNullable));
+    }
+    return typeDescriptor;
   }
 
   public boolean isSameType(TypeMirror asType, TypeMirror type) {
@@ -506,8 +602,14 @@ public class J2CLUtils {
     return createTypeDescriptor(typeMirror, /* inNullMarkedScope= */ false);
   }
 
-  public Element asElement(TypeMirror erasure) {
-    return MoreTypes.asElement(erasure);
+  public Element asElement(TypeMirror typeMirror) {
+    if (typeMirror instanceof JCPrimitiveType) {
+      return ((JCPrimitiveType) typeMirror).asElement();
+    }
+    if (typeMirror instanceof Type) {
+      return ((Type) typeMirror).tsym;
+    }
+    return types.asElement(typeMirror);
   }
 
   public TypeElement asTypeElement(TypeMirror typeMirror) {
@@ -696,9 +798,7 @@ public class J2CLUtils {
   }
 
   private TypeVariable createTypeVariable(javax.lang.model.type.TypeVariable typeVariable) {
-    TypeMirror typeDescriptor = typeVariable.getUpperBound();
-
-    if (typeDescriptor != null) {
+    if (typeVariable instanceof CapturedType) {
       return createWildcardTypeVariable(typeVariable.getUpperBound());
     }
 
@@ -708,8 +808,7 @@ public class J2CLUtils {
     List<String> classComponents = getClassComponents(typeVariable);
 
     return TypeVariable.newBuilder()
-        // .setUpperBoundTypeDescriptorSupplier(boundTypeDescriptorFactory) //TODO
-        .setWildcardOrCapture(false)
+        .setUpperBoundTypeDescriptorSupplier(boundTypeDescriptorFactory) // TODO
         .setUniqueKey(
             String.join("::", classComponents)
                 + (typeVariable.getUpperBound() != null
@@ -721,7 +820,7 @@ public class J2CLUtils {
 
   private TypeVariable createWildcardTypeVariable(TypeMirror bound) {
     return TypeVariable.newBuilder()
-        // .setUpperBoundTypeDescriptorSupplier(() -> createTypeDescriptor(bound))
+        .setUpperBoundTypeDescriptorSupplier(() -> createTypeDescriptor(bound))
         .setWildcardOrCapture(true)
         .setName("?")
         .setUniqueKey("::?::" + (bound != null ? bound.toString() : ""))
@@ -841,15 +940,14 @@ public class J2CLUtils {
                             .findFirst()
                             .orElse(null),
                         inNullMarkedScope))
-            /*                    .setInterfaceTypeDescriptorsFactory(
-            td ->
+            .setInterfaceTypeDescriptorsFactory(
+                td ->
                     createTypeDescriptors(
-                            types.directSupertypes(classType).stream()
-                                    .filter(e -> isInterface(e))
-                                    .collect(toImmutableList()),
-                            inNullMarkedScope,
-                            DeclaredTypeDescriptor.class))*/
-
+                        types.directSupertypes(classType).stream()
+                            .filter(e -> isInterface(e))
+                            .collect(toImmutableList()),
+                        inNullMarkedScope,
+                        DeclaredTypeDescriptor.class))
             .setSingleAbstractMethodDescriptorFactory(
                 td -> {
                   ExecutableElement functionalInterfaceMethod =
@@ -873,6 +971,13 @@ public class J2CLUtils {
 
   private ImmutableList<ExecutableElement> getDeclaredMethods(DeclaredType classType) {
     return ElementFilter.methodsIn(classType.asElement().getEnclosedElements()).stream()
+        .collect(toImmutableList());
+  }
+
+  public <T extends TypeDescriptor> ImmutableList<T> createTypeDescriptors(
+      List<? extends TypeMirror> typeMirrors, boolean inNullMarkedScope, Class<T> clazz) {
+    return typeMirrors.stream()
+        .map(typeMirror -> createTypeDescriptor(typeMirror, inNullMarkedScope, clazz))
         .collect(toImmutableList());
   }
 
@@ -981,5 +1086,40 @@ public class J2CLUtils {
 
   private ExecutableElement getFunctionalInterfaceMethod(TypeMirror typeMirror) {
     throw new UnsupportedOperationException();
+  }
+
+  public MemberDescriptor getDefaultConstructor(TypeElement clazz) {
+    DeclaredTypeDescriptor typeDeclaration =
+        (DeclaredTypeDescriptor) createTypeDescriptor(clazz.asType());
+
+    MethodDescriptor ctor =
+        createDeclarationForType(clazz).getDeclaredMethodDescriptors().stream()
+            .filter(MemberDescriptor::isJsConstructor)
+            .filter(m -> m.getParameterDescriptors().isEmpty())
+            .findFirst()
+            .orElseGet(() -> AstUtils.createImplicitConstructorDescriptor(typeDeclaration));
+    return ctorMethodDescriptorFromJavaConstructor(ctor);
+  }
+
+  private static String getCtorName(MethodDescriptor methodDescriptor) {
+    // Synthesize a name that is unique per class to avoid property clashes in JS.
+    return MethodDescriptor.CTOR_METHOD_PREFIX
+        + "__"
+        + methodDescriptor.getEnclosingTypeDescriptor().getMangledName();
+  }
+
+  private static MethodDescriptor ctorMethodDescriptorFromJavaConstructor(
+      MethodDescriptor constructor) {
+    return constructor.transform(
+        builder ->
+            builder
+                .setReturnTypeDescriptor(PrimitiveTypes.VOID)
+                .setName(getCtorName(constructor))
+                .setConstructor(false)
+                .setStatic(false)
+                .setJsInfo(JsInfo.NONE)
+                .removeParameterOptionality()
+                .setOrigin(MethodDescriptor.MethodOrigin.SYNTHETIC_CTOR_FOR_CONSTRUCTOR)
+                .setVisibility(Visibility.PUBLIC));
   }
 }

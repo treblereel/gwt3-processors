@@ -17,6 +17,8 @@
 package org.treblereel.j2cl.processors.generator;
 
 import com.google.auto.common.MoreElements;
+import com.google.auto.common.MoreTypes;
+import com.google.j2cl.transpiler.ast.DeclaredTypeDescriptor;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -26,12 +28,8 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.ArrayType;
-import javax.lang.model.type.TypeKind;
-import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.DeclaredType;
 import javax.lang.model.util.ElementFilter;
-import jsinterop.annotations.JsMethod;
 import jsinterop.annotations.JsType;
 import org.treblereel.j2cl.processors.annotations.ES6Module;
 import org.treblereel.j2cl.processors.annotations.GWT3EntryPoint;
@@ -141,6 +139,23 @@ public class GWT3ExportGenerator extends AbstractGenerator {
               + GWT3Export.class.getCanonicalName()
               + ", mustn't be annotated with @ES6Module");
     }
+    Set<ExecutableElement> constructors =
+        ElementFilter.constructorsIn(parent.getEnclosedElements()).stream()
+            .collect(Collectors.toSet());
+    if (!constructors.isEmpty()) {
+      constructors.stream()
+          .filter(elm -> elm.getModifiers().contains(Modifier.PUBLIC))
+          .filter(elm -> elm.getParameters().isEmpty())
+          .findAny()
+          .orElseThrow(
+              () ->
+                  new GenerationException(
+                      parent,
+                      "Class,  that contains methods annotated with "
+                          + GWT3Export.class.getCanonicalName()
+                          + ", must have public constructor"));
+    }
+
     return parent;
   }
 
@@ -174,6 +189,8 @@ public class GWT3ExportGenerator extends AbstractGenerator {
   }
 
   private void generateClassWrapper(TypeElement parent, StringBuffer source) {
+    String nameCtor = utils.getDefaultConstructor(parent).getMangledName();
+
     source.append("class _");
     source.append(parent.getSimpleName());
     source.append(" extends ");
@@ -185,11 +202,8 @@ public class GWT3ExportGenerator extends AbstractGenerator {
     source.append(System.lineSeparator());
     source.append("        super();");
     source.append(System.lineSeparator());
-    source.append(
-        String.format(
-            "        this.$ctor__%s__();",
-            parent.getQualifiedName().toString().replaceAll("\\.", "_")));
-    source.append(System.lineSeparator());
+    source.append(String.format("        this.%s();", nameCtor));
+
     source.append("    }");
     source.append(System.lineSeparator());
     source.append("}");
@@ -214,6 +228,7 @@ public class GWT3ExportGenerator extends AbstractGenerator {
   }
 
   private void generateMethod(ExecutableElement element, TypeElement parent, StringBuffer source) {
+
     source.append("goog.exportSymbol('");
     source.append(getTypeName(parent));
     source.append(".");
@@ -230,41 +245,24 @@ public class GWT3ExportGenerator extends AbstractGenerator {
 
     source.append("', ");
     source.append(parent.getSimpleName().toString().replaceAll("_", "__"));
-    getMethodName(element, source);
+    getMethodName(element, parent, source);
     source.append(");");
     source.append(System.lineSeparator());
   }
 
-  private void getMethodName(ExecutableElement element, StringBuffer source) {
+  private void getMethodName(ExecutableElement element, TypeElement parent, StringBuffer source) {
+    DeclaredType declaredType = MoreTypes.asDeclared(parent.asType());
+
+    DeclaredTypeDescriptor enclosingTypeDescriptor =
+        utils.createDeclaredTypeDescriptor(declaredType);
+
+    String methodName =
+        utils.createDeclarationMethodDescriptor(element, enclosingTypeDescriptor).getMangledName();
+
     source.append(".");
     if (!element.getModifiers().contains(Modifier.STATIC)) {
       source.append("prototype.");
     }
-
-    if (element.getAnnotation(JsMethod.class) != null
-        || element.getEnclosingElement().getAnnotation(JsType.class) != null) {
-      source.append(element.getSimpleName().toString());
-    } else {
-      source.append("m_");
-      source.append(element.getSimpleName().toString());
-
-      if (element.getParameters().isEmpty()) {
-        source.append("__");
-      } else {
-        for (VariableElement p : element.getParameters()) {
-          TypeMirror param = erase(p.asType());
-          source.append("__");
-          if (p.asType().getKind().equals(TypeKind.ARRAY)) {
-            source.append("arrayOf_");
-            param = ((ArrayType) p.asType()).getComponentType();
-          }
-          source.append(param.toString().replaceAll("\\.", "_"));
-        }
-      }
-    }
-  }
-
-  private TypeMirror erase(TypeMirror type) {
-    return context.getProcessingEnv().getTypeUtils().erasure(type);
+    source.append(methodName);
   }
 }
