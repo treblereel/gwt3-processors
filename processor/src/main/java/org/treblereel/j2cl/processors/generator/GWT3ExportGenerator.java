@@ -21,6 +21,7 @@ import com.google.auto.common.MoreTypes;
 import com.google.j2cl.transpiler.ast.DeclaredTypeDescriptor;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.lang.model.element.Element;
@@ -30,6 +31,7 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.util.ElementFilter;
+import jsinterop.annotations.JsConstructor;
 import jsinterop.annotations.JsType;
 import org.treblereel.j2cl.processors.annotations.ES6Module;
 import org.treblereel.j2cl.processors.annotations.GWT3EntryPoint;
@@ -160,10 +162,15 @@ public class GWT3ExportGenerator extends AbstractGenerator {
   }
 
   private void generate(TypeElement parent, Set<ExecutableElement> elements) {
+    DeclaredType declaredType = MoreTypes.asDeclared(parent.asType());
+    DeclaredTypeDescriptor enclosingTypeDescriptor =
+        utils.createDeclaredTypeDescriptor(declaredType);
+
+    boolean isJsType = isJsType(parent);
 
     StringBuffer source = new StringBuffer();
-    generateClassExport(parent, source);
-    generateMethods(parent, elements, source);
+    generateClassExport(enclosingTypeDescriptor, parent, isJsType, source);
+    generateMethods(enclosingTypeDescriptor, parent, elements, source);
 
     String className = parent.getSimpleName().toString();
     String classPkg = MoreElements.getPackage(parent).getQualifiedName().toString();
@@ -172,24 +179,37 @@ public class GWT3ExportGenerator extends AbstractGenerator {
   }
 
   private void generateMethods(
-      TypeElement parent, Set<ExecutableElement> elements, StringBuffer source) {
-    elements.forEach(method -> generateMethod(method, parent, source));
+      DeclaredTypeDescriptor enclosingTypeDescriptor,
+      TypeElement parent,
+      Set<ExecutableElement> elements,
+      StringBuffer source) {
+    elements.forEach(method -> generateMethod(enclosingTypeDescriptor, parent, method, source));
   }
 
-  private void generateClassExport(TypeElement parent, StringBuffer source) {
-    generateClassWrapper(parent, source);
+  private void generateClassExport(
+      DeclaredTypeDescriptor enclosingTypeDescriptor,
+      TypeElement parent,
+      boolean isJsType,
+      StringBuffer source) {
+    if (!isJsType) {
+      generateClassWrapper(enclosingTypeDescriptor, parent, source);
+    }
     source.append(System.lineSeparator());
 
     source.append("goog.exportSymbol('");
     source.append(getTypeName(parent));
-    source.append("', _");
+    source.append("',");
+    if (!isJsType) {
+      source.append("_");
+    }
     source.append(parent.getSimpleName());
     source.append(");");
     source.append(System.lineSeparator());
   }
 
-  private void generateClassWrapper(TypeElement parent, StringBuffer source) {
-    String nameCtor = utils.getDefaultConstructor(parent).getMangledName();
+  private void generateClassWrapper(
+      DeclaredTypeDescriptor enclosingTypeDescriptor, TypeElement parent, StringBuffer source) {
+    String nameCtor = utils.getDefaultConstructor(enclosingTypeDescriptor, parent).getMangledName();
 
     source.append("class _");
     source.append(parent.getSimpleName());
@@ -227,7 +247,11 @@ public class GWT3ExportGenerator extends AbstractGenerator {
     return (!pkg.isEmpty() ? pkg + "." : "") + clazz;
   }
 
-  private void generateMethod(ExecutableElement element, TypeElement parent, StringBuffer source) {
+  private void generateMethod(
+      DeclaredTypeDescriptor enclosingTypeDescriptor,
+      TypeElement parent,
+      ExecutableElement element,
+      StringBuffer source) {
 
     source.append("goog.exportSymbol('");
     source.append(getTypeName(parent));
@@ -245,17 +269,15 @@ public class GWT3ExportGenerator extends AbstractGenerator {
 
     source.append("', ");
     source.append(parent.getSimpleName().toString().replaceAll("_", "__"));
-    getMethodName(element, parent, source);
+    getMethodName(enclosingTypeDescriptor, element, source);
     source.append(");");
     source.append(System.lineSeparator());
   }
 
-  private void getMethodName(ExecutableElement element, TypeElement parent, StringBuffer source) {
-    DeclaredType declaredType = MoreTypes.asDeclared(parent.asType());
-
-    DeclaredTypeDescriptor enclosingTypeDescriptor =
-        utils.createDeclaredTypeDescriptor(declaredType);
-
+  private void getMethodName(
+      DeclaredTypeDescriptor enclosingTypeDescriptor,
+      ExecutableElement element,
+      StringBuffer source) {
     String methodName =
         utils.createDeclarationMethodDescriptor(element, enclosingTypeDescriptor).getMangledName();
 
@@ -264,5 +286,21 @@ public class GWT3ExportGenerator extends AbstractGenerator {
       source.append("prototype.");
     }
     source.append(methodName);
+  }
+
+  private boolean isJsType(TypeElement parent) {
+    if (parent.getAnnotation(JsType.class) != null) {
+      return true;
+    }
+
+    Optional<ExecutableElement> constructor =
+        ElementFilter.constructorsIn(parent.getEnclosedElements()).stream()
+            .filter(elm -> elm.getAnnotation(JsConstructor.class) != null)
+            .findFirst();
+    if (constructor.isPresent()) {
+      return true;
+    }
+
+    return false;
   }
 }

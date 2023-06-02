@@ -19,7 +19,6 @@
     <dependency>
       <groupId>org.treblereel.j2cl.processors</groupId>
       <artifactId>annotations</artifactId>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.treblereel.j2cl.processors</groupId>
@@ -30,26 +29,24 @@
     <dependency>
       <groupId>com.google.jsinterop</groupId>
       <artifactId>jsinterop-annotations</artifactId>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>com.google.jsinterop</groupId>
       <artifactId>base</artifactId>
-      <scope>test</scope>
     </dependency>
 
     <dependency>
       <groupId>com.google.elemental2</groupId>
       <artifactId>elemental2-dom</artifactId>
-      <scope>test</scope>
     </dependency>
-
-
-    <!-- test dependencies -->
     <dependency>
       <groupId>com.vertispan.j2cl</groupId>
       <artifactId>junit-annotations</artifactId>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.vertispan.j2cl</groupId>
+      <artifactId>gwttestcase-emul</artifactId>
     </dependency>
     <dependency>
       <groupId>com.vertispan.j2cl</groupId>
@@ -62,6 +59,12 @@
       <artifactId>junit-emul</artifactId>
       <scope>test</scope>
     </dependency>
+
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+    </dependency>
+
   </dependencies>
 
   <build>
@@ -70,9 +73,6 @@
         <groupId>com.vertispan.j2cl</groupId>
         <artifactId>j2cl-maven-plugin</artifactId>
         <version>${maven.j2cl.plugin}</version>
-        <configuration>
-          <compilationLevel>ADVANCED</compilationLevel>
-        </configuration>
         <executions>
           <execution>
             <id>j2cl-test</id>
@@ -82,6 +82,10 @@
             </goals>
           </execution>
         </executions>
+        <configuration>
+          <defaultWebappDirectory>${project.build.directory}/gwt/launcherDir</defaultWebappDirectory>
+          <compilationLevel>ADVANCED</compilationLevel>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

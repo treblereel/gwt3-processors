@@ -89,6 +89,31 @@ describe("@GWT3Export test suite", function() {
     expect(test.new_custome_method_name()).toBe('new_custome_method_name');
   });
 
+  it("test JsType with JsConstructor and JsMethods", function() {
+    var test = new org.treblereel.j2cl.exports.JsMethodsTester2();
+    expect(test.test1('JsMethodsTester')).toBe('JsMethodsTester');
+    expect(org.treblereel.j2cl.exports.JsMethodsTester.test2('JsMethodsTester')).toBe('JsMethodsTester');
+    expect(test.test3()).toBe('staticProperty');
+    expect(org.treblereel.j2cl.exports.JsMethodsTester.test4()).toBe('staticProperty');
+    expect(test.test5()).toBe('qwerty');
+    expect(test.new_custome_method_name()).toBe('new_custome_method_name');
+  });
+
+  it("test JsType with JsConstructor", function() {
+    var test = new org.treblereel.j2cl.exports.JsMethodsTester3();
+    expect(test.test1('JsMethodsTester')).toBe('JsMethodsTester');
+    expect(org.treblereel.j2cl.exports.JsMethodsTester.test2('JsMethodsTester')).toBe('JsMethodsTester');
+    expect(test.test3()).toBe('staticProperty');
+    expect(org.treblereel.j2cl.exports.JsMethodsTester.test4()).toBe('staticProperty');
+    expect(test.test5()).toBe('qwerty');
+    expect(test.new_custome_method_name()).toBe('new_custome_method_name');
+  });
+
+  it("test JsType with Only one annotated method", function() {
+    var test = new org.treblereel.j2cl.exports.JsMethodsTesterWithOnlyOneExportedMethod();
+    expect(test.new_custome_method_name()).toBe('new_custome_method_name');
+  });
+
   it("test ClassWithGWT3ExportOnDecl", function() {
     var test = new org.treblereel.j2cl.exports.ClassWithGWT3ExportOnDecl();
 

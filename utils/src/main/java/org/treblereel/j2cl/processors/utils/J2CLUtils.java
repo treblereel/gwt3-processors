@@ -1101,6 +1101,17 @@ public class J2CLUtils {
     return ctorMethodDescriptorFromJavaConstructor(ctor);
   }
 
+  public MemberDescriptor getDefaultConstructor(
+      DeclaredTypeDescriptor typeDeclaration, TypeElement clazz) {
+    MethodDescriptor ctor =
+        createDeclarationForType(clazz).getDeclaredMethodDescriptors().stream()
+            .filter(MemberDescriptor::isJsConstructor)
+            .filter(m -> m.getParameterDescriptors().isEmpty())
+            .findFirst()
+            .orElseGet(() -> AstUtils.createImplicitConstructorDescriptor(typeDeclaration));
+    return ctorMethodDescriptorFromJavaConstructor(ctor);
+  }
+
   private static String getCtorName(MethodDescriptor methodDescriptor) {
     // Synthesize a name that is unique per class to avoid property clashes in JS.
     return MethodDescriptor.CTOR_METHOD_PREFIX
