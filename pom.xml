@@ -71,10 +71,16 @@
     <module>annotations</module>
     <module>processor</module>
       <module>utils</module>
+    <module>common</module>
   </modules>
 
   <dependencyManagement>
     <dependencies>
+      <dependency>
+        <groupId>com.google.elemental2</groupId>
+        <artifactId>elemental2-dom</artifactId>
+        <version>${com.google.elemental2.version}</version>
+      </dependency>
       <dependency>
         <groupId>com.vertispan.j2cl</groupId>
         <artifactId>frontend-common</artifactId>

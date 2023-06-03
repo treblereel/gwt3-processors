@@ -35,6 +35,14 @@
     <url>https://github.com/treblereel</url>
   </organization>
 
+  <dependencies>
+    <dependency>
+      <groupId>org.treblereel.j2cl.processors</groupId>
+      <artifactId>common</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies>
+
   <build>
     <resources>
       <resource>
