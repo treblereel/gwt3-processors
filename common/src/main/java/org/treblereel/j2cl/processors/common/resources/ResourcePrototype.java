@@ -15,6 +15,12 @@
  */
 package org.treblereel.j2cl.processors.common.resources;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
 /** The base interface all bundle resource types must extend. */
 public interface ResourcePrototype {
   /**
@@ -23,4 +29,11 @@ public interface ResourcePrototype {
    * @return the name of the function within the ClientBundle used to create the ResourcePrototype
    */
   String getName();
+
+  @Inherited
+  @Retention(RetentionPolicy.RUNTIME)
+  @Target(ElementType.TYPE)
+  @interface DefaultExtensions {
+    String[] value();
+  }
 }

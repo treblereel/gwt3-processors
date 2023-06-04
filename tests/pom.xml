@@ -30,7 +30,7 @@
     <elemental2.version>1.1.0</elemental2.version>
     <!-- CI -->
     <j2cl.version>0.10.0-3c97afeac</j2cl.version>
-
+    <junit.version>4.11</junit.version>
   </properties>
 
   <modules>
@@ -95,6 +95,12 @@
         <artifactId>junit-emul</artifactId>
         <version>${j2cl.version}</version>
       </dependency>
+      <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>${junit.version}</version>
+        <scope>test</scope>
+      </dependency>
     </dependencies>
 
   </dependencyManagement>
@@ -111,5 +117,16 @@
       </plugin>
     </plugins>
   </build>
+
+  <modules>
+    <module>es6shim</module>
+    <module>entrypoint</module>
+    <module>exports</module>
+    <module>translation/pom_no_bundle.xml</module>
+    <module>translation/pom.xml</module>
+    <module>translation/pom_fr.xml</module>
+    <module>translation/pom_fr_nr.xml</module>
+    <module>resources</module>
+  </modules>
 
 </project>

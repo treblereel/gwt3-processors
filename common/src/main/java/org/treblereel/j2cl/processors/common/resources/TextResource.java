@@ -15,7 +15,7 @@
  */
 package org.treblereel.j2cl.processors.common.resources;
 
-import org.treblereel.j2cl.processors.common.resources.ext.DefaultExtensions;
+import org.treblereel.j2cl.processors.common.resources.ResourcePrototype.DefaultExtensions;
 
 /** A resource that contains text that should be incorporated into the compiled output. */
 @DefaultExtensions(value = {".txt"})

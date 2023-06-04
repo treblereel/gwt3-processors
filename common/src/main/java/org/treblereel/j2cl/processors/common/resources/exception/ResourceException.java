@@ -19,24 +19,8 @@ package org.treblereel.j2cl.processors.common.resources.exception;
 import org.treblereel.j2cl.processors.common.resources.ResourcePrototype;
 
 /** Associates a {@link ResourcePrototype} with a program error. */
-public class ResourceException extends Exception {
-  private final ResourcePrototype resource;
-
-  public ResourceException(ResourcePrototype resource) {
-    this.resource = resource;
-  }
-
-  public ResourceException(ResourcePrototype resource, String msg) {
+public class ResourceException extends RuntimeException {
+  public ResourceException(String msg) {
     super(msg);
-    this.resource = resource;
-  }
-
-  public ResourceException(ResourcePrototype resource, String msg, Throwable t) {
-    super(msg, t);
-    this.resource = resource;
-  }
-
-  public ResourcePrototype getResource() {
-    return resource;
   }
 }

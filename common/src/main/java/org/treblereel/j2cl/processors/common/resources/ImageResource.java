@@ -22,7 +22,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import org.treblereel.j2cl.processors.common.resources.ext.DefaultExtensions;
+import org.treblereel.j2cl.processors.common.resources.ResourcePrototype.DefaultExtensions;
 
 /** Provides access to image resources at runtime. */
 @DefaultExtensions(value = {".png", ".jpg", ".gif", ".bmp"})
