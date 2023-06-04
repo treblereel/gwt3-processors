@@ -27,21 +27,8 @@ import java.lang.annotation.Target;
  * not be determined automatically at compile time.
  */
 public interface DataResource extends ResourcePrototype {
-  /**
-   * Retrieves a URL by which the contents of the resource can be obtained. This will be an absolute
-   * URL.
-   */
-  String asString();
 
-  /**
-   * Specifies that the resource or resources associated with the {@link ResourcePrototype} should
-   * not be embedded into the compiled output. This may be useful, for exmaple, when it a particular
-   * browser or plugin is unable to handle RFC 2397 data URLs.
-   */
-  @Documented
-  @Retention(RetentionPolicy.RUNTIME)
-  @Target(ElementType.METHOD)
-  @interface DoNotEmbed {}
+  String asString();
 
   /**
    * Specifies the MIME Type of the resource or resources associated with the {@link

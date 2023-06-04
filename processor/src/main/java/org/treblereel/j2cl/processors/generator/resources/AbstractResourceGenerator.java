@@ -16,6 +16,8 @@
 
 package org.treblereel.j2cl.processors.generator.resources;
 
+import com.google.auto.common.MoreElements;
+import com.google.common.io.BaseEncoding;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
@@ -29,8 +31,11 @@ import java.util.List;
 import java.util.Map;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
+import org.treblereel.j2cl.processors.common.resources.ClientBundle;
 import org.treblereel.j2cl.processors.common.resources.ResourcePrototype;
 import org.treblereel.j2cl.processors.common.resources.ResourcePrototype.DefaultExtensions;
+import org.treblereel.j2cl.processors.common.resources.TextResource;
+import org.treblereel.j2cl.processors.common.resources.exception.ResourceException;
 import org.treblereel.j2cl.processors.context.AptContext;
 import org.treblereel.j2cl.processors.exception.GenerationException;
 
@@ -47,7 +52,10 @@ public abstract class AbstractResourceGenerator {
     cfg.setFallbackOnNullLoopVariable(false);
   }
 
-  private static final int MAX_STRING_CHUNK = 16383;
+  protected static final int MAX_STRING_CHUNK = 16383;
+
+  protected static final int MAX_ENCODED_SIZE = (2 << 15) - 1;
+  protected static final int MAX_INLINE_SIZE = 2 << 15;
 
   private Template template;
 
@@ -84,9 +92,18 @@ public abstract class AbstractResourceGenerator {
     }
   }
 
-  protected String write(String toWrite) {
+  protected String write(String toWrite, ExecutableElement method) {
     if (toWrite.length() > MAX_STRING_CHUNK) {
-      return writeLongString(toWrite);
+      String encoded = writeLongString(toWrite);
+      if (encoded.length() < MAX_ENCODED_SIZE) {
+        return encoded;
+      }
+      throw new ResourceException(
+          "Encoded string is too long for "
+              + method.getEnclosingElement()
+              + "."
+              + method.getSimpleName()
+              + "()");
     } else {
       return "return \"" + escape(toWrite) + "\";";
     }
@@ -114,6 +131,36 @@ public abstract class AbstractResourceGenerator {
     builder.append("                ");
     builder.append("return builder.toString();").append("\n");
     return builder.toString();
+  }
+
+  protected URL getResource(ExecutableElement method, String[] extensions) {
+    String pkg =
+        MoreElements.getPackage(method).getQualifiedName().toString().replaceAll("\\.", "/");
+    if (method.getAnnotation(ClientBundle.Source.class) != null) {
+      ClientBundle.Source source = method.getAnnotation(ClientBundle.Source.class);
+      for (int i = 0; i < source.value().length; i++) {
+        String fullPath = pkg + "/" + source.value()[i];
+        URL url = context.resourceOracle.findResource(fullPath);
+        if (url != null) {
+          return url;
+        }
+      }
+    } else if (extensions != null) {
+      for (int i = 0; i < defaultExtensions.value().length; i++) {
+        String extension = defaultExtensions.value()[i];
+        String fullPath = pkg + "/" + method.getSimpleName().toString() + extension;
+        URL url = context.resourceOracle.findResource(fullPath);
+        if (url != null) {
+          return url;
+        }
+      }
+    }
+    throw new ResourceException(
+        String.format(
+            "Unable to find resource [%s] at %s.%s",
+            TextResource.class.getSimpleName(),
+            method.getEnclosingElement().toString(),
+            method.getSimpleName().toString()));
   }
 
   /**
@@ -173,10 +220,22 @@ public abstract class AbstractResourceGenerator {
     return String.valueOf(newChars);
   }
 
-  protected String readURLAsString(URL url) {
+  protected static String toBase64(byte[] data) {
+    return BaseEncoding.base64().encode(data).replaceAll("\\s+", "");
+  }
+
+  protected String readURLAsString(URL url, ExecutableElement method) {
     byte[] bytes = readURLAsBytes(url);
     if (bytes != null) {
-      return new String(bytes, StandardCharsets.UTF_8);
+      if (bytes.length < MAX_INLINE_SIZE) {
+        return new String(bytes, StandardCharsets.UTF_8);
+      }
+      throw new GenerationException(
+          "Resource is too large to inline: "
+              + method.getEnclosingElement()
+              + "."
+              + method.getSimpleName()
+              + "()");
     }
     return null;
   }
