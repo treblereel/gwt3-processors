@@ -25,48 +25,17 @@ import org.treblereel.j2cl.processors.common.resources.ImageResource;
  */
 public class ImageResourcePrototype implements ImageResource {
 
-  /** Marker class for bundled {@code ImageResourcePrototype}. */
-  public static class Bundle extends ImageResourcePrototype {
-    public Bundle(
-        String name,
-        String url,
-        int left,
-        int top,
-        int width,
-        int height,
-        boolean animated,
-        boolean lossy) {
-      super(name, url, left, top, width, height, animated, lossy);
-    }
-  }
-
-  private final boolean animated;
-  private final boolean lossy;
   private final String name;
   private final String url;
-  private final int left;
-  private final int top;
   private final int width;
   private final int height;
 
   /** Only called by generated code. */
-  public ImageResourcePrototype(
-      String name,
-      String url,
-      int left,
-      int top,
-      int width,
-      int height,
-      boolean animated,
-      boolean lossy) {
+  public ImageResourcePrototype(String name, String url, int width, int height) {
     this.name = name;
-    this.left = left;
-    this.top = top;
     this.height = height;
     this.width = width;
     this.url = url;
-    this.animated = animated;
-    this.lossy = lossy;
   }
 
   /** Exists for testing purposes, not part of the ImageResource interface. */
@@ -75,50 +44,26 @@ public class ImageResourcePrototype implements ImageResource {
   }
 
   /** Exists for testing purposes, not part of the ImageResource interface. */
-  public int getLeft() {
-    return left;
+  public int getWidth() {
+    return width;
   }
 
   /** Returns the Image */
   @Override
   public Image getImage() {
     Image image = (Image) document.createElement("img");
-    image.src = getSafeUri();
+    image.src = url;
     image.name = name;
     image.width = width;
     image.height = height;
-    // image.dir = "";
-    // setSetting and so on
     return image;
-  }
-
-  public String getSafeUri() {
-    return url;
   }
 
   public String getName() {
     return name;
   }
 
-  public int getTop() {
-    return top;
-  }
-
   public String getURL() {
     return url;
-  }
-
-  /** Exists for testing purposes, not part of the ImageResource interface. */
-  public int getWidth() {
-    return width;
-  }
-
-  public boolean isAnimated() {
-    return animated;
-  }
-
-  /** Exists for testing purposes, not part of the ImageResource interface. */
-  public boolean isLossy() {
-    return lossy;
   }
 }

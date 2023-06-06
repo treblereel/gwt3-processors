@@ -1,14 +1,7 @@
 private static ${prototype} ${name};
 
     private void ${name}Initializer() {
-        ${name} = new ${prototype}() {
-            public String ${getter}() {
-                ${initializer?no_esc}
-            }
-            public String getName() {
-                return "${name}";
-            }
-        };
+        ${initializer?no_esc}
     }
 
     private static class ${name}Initializer {

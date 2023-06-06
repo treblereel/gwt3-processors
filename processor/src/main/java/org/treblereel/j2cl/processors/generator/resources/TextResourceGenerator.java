@@ -16,32 +16,56 @@
 
 package org.treblereel.j2cl.processors.generator.resources;
 
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.Map;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
+
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
 import org.treblereel.j2cl.processors.common.resources.ResourcePrototype;
 import org.treblereel.j2cl.processors.common.resources.TextResource;
 import org.treblereel.j2cl.processors.context.AptContext;
+import org.treblereel.j2cl.processors.exception.GenerationException;
 
 class TextResourceGenerator extends AbstractResourceGenerator {
 
-  TextResourceGenerator(AptContext context) {
-    super(
-        context,
-        TextResource.class,
-        TextResource.class.getAnnotation(ResourcePrototype.DefaultExtensions.class));
-  }
+    private Template template;
 
-  @Override
-  String initializer(Map<String, Object> root, TypeElement clientBundle, ExecutableElement method) {
-    root.put("getter", "getText");
-    String resource = lookupResource(method);
-    return write(resource, method);
-  }
+    TextResourceGenerator(AptContext context) {
+        super(
+                context,
+                TextResource.class,
+                TextResource.class.getAnnotation(ResourcePrototype.DefaultExtensions.class));
+    }
 
-  private String lookupResource(ExecutableElement method) {
-    URL resource = getResource(method, defaultExtensions.value());
-    return readURLAsString(resource, method);
-  }
+    @Override
+    void initializer(Map<String, Object> root, TypeElement clientBundle, ExecutableElement method) {
+        String resource = lookupResource(method);
+        String encoded = write(resource, method, s -> "return " + s);
+        Map<String, Object> definition = new HashMap<>();
+        definition.put("name", method.getSimpleName().toString());
+        definition.put("impl", encoded);
+
+        StringOutputStream os = new StringOutputStream();
+        try (Writer out = new OutputStreamWriter(os, StandardCharsets.UTF_8)) {
+            if (template == null) {
+                template = cfg.getTemplate("textresource.ftlh");
+            }
+            template.process(definition, out);
+            root.put("initializer", os.toString());
+        } catch (TemplateException | IOException e) {
+            throw new GenerationException(e);
+        }
+    }
+
+    private String lookupResource(ExecutableElement method) {
+        URL resource = getResource(method, defaultExtensions.value());
+        return readURLAsString(resource, method);
+    }
 }

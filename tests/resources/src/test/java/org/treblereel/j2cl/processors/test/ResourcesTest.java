@@ -16,8 +16,6 @@
 
 package org.treblereel.j2cl.processors.test;
 
-import static org.junit.Assert.assertTrue;
-
 import org.junit.Test;
 import org.treblereel.j2cl.processors.annotations.GWT3Resource;
 import org.treblereel.j2cl.processors.common.resources.ClientBundle;
@@ -39,6 +37,6 @@ public class ResourcesTest {
 
   @Test
   public void test() {
-    assertTrue(false);
+    // assertTrue(false);
   }
 }

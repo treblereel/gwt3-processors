@@ -31,9 +31,6 @@ public interface ImageResource extends ResourcePrototype {
   /** Returns the height of the image. */
   int getHeight();
 
-  /** Returns the horizontal position of the image within the composite image. */
-  int getLeft();
-
   /** Returns the Image */
   Image getImage();
 
