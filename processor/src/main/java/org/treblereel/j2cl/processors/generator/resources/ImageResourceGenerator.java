@@ -16,6 +16,10 @@
 
 package org.treblereel.j2cl.processors.generator.resources;
 
+import static org.treblereel.j2cl.processors.common.resources.ImageResource.ImageOptions;
+
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -30,73 +34,67 @@ import java.util.Map;
 import javax.imageio.ImageIO;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
-
-import freemarker.template.Template;
-import freemarker.template.TemplateException;
 import org.treblereel.j2cl.processors.common.resources.ImageResource;
 import org.treblereel.j2cl.processors.common.resources.ResourcePrototype;
 import org.treblereel.j2cl.processors.context.AptContext;
 import org.treblereel.j2cl.processors.exception.GenerationException;
 
-
-import static org.treblereel.j2cl.processors.common.resources.ImageResource.ImageOptions;
-
 class ImageResourceGenerator extends AbstractResourceGenerator {
 
-    private Template template;
+  private Template template;
 
-    ImageResourceGenerator(AptContext context) {
-        super(
-                context,
-                ImageResource.class,
-                ImageResource.class.getAnnotation(ResourcePrototype.DefaultExtensions.class));
-    }
+  ImageResourceGenerator(AptContext context) {
+    super(
+        context,
+        ImageResource.class,
+        ImageResource.class.getAnnotation(ResourcePrototype.DefaultExtensions.class));
+  }
 
-    @Override
-    void initializer(Map<String, Object> root, TypeElement clientBundle, ExecutableElement method) {
-        Map<String, Object> definition = new HashMap<>();
-        definition.put("name", method.getSimpleName().toString());
+  @Override
+  void initializer(Map<String, Object> root, TypeElement clientBundle, ExecutableElement method) {
+    Map<String, Object> definition = new HashMap<>();
+    definition.put("name", method.getSimpleName().toString());
 
-        URL resource = getResource(method, defaultExtensions.value());
-        Path imagePath = Paths.get(resource.getPath());
-        try {
-            String mimeType = String.format("data:%s;base64,", Files.probeContentType(imagePath));
-            setSize(method, imagePath, definition);
+    URL resource = getResource(method, defaultExtensions.value());
+    Path imagePath = Paths.get(resource.getPath());
+    try {
+      String mimeType = String.format("data:%s;base64,", Files.probeContentType(imagePath));
+      setSize(method, imagePath, definition);
 
-            byte[] data = readURLAsBytes(resource);
-            String base64Contents = mimeType + toBase64(data);
-            String encoded = write(base64Contents, method, s -> "String encoded =  " + s);
-            definition.put("encoded", encoded);
-            StringOutputStream os = new StringOutputStream();
-            try (Writer out = new OutputStreamWriter(os, StandardCharsets.UTF_8)) {
-                if (template == null) {
-                    template = cfg.getTemplate("imageresource.ftlh");
-                }
-                template.process(definition, out);
-                root.put("initializer", os.toString());
-            } catch (TemplateException | IOException e) {
-                throw new GenerationException(e);
-            }
-        } catch (IOException e) {
-            throw new GenerationException("Unable to determine mime type for " + imagePath, e);
+      byte[] data = readURLAsBytes(resource);
+      String base64Contents = mimeType + toBase64(data);
+      String encoded = write(base64Contents, method, s -> "String encoded =  " + s);
+      definition.put("encoded", encoded);
+      StringOutputStream os = new StringOutputStream();
+      try (Writer out = new OutputStreamWriter(os, StandardCharsets.UTF_8)) {
+        if (template == null) {
+          template = cfg.getTemplate("imageresource.ftlh");
         }
+        template.process(definition, out);
+        root.put("initializer", os.toString());
+      } catch (TemplateException | IOException e) {
+        throw new GenerationException(e);
+      }
+    } catch (IOException e) {
+      throw new GenerationException("Unable to determine mime type for " + imagePath, e);
     }
+  }
 
-    private static void setSize(
-            ExecutableElement method, Path imagePath, Map<String, Object> definition) throws IOException {
-        BufferedImage image = ImageIO.read(imagePath.toFile());
-        int width = image.getWidth();
-        int height = image.getHeight();
-        ImageOptions imageOptions = method.getAnnotation(ImageOptions.class);
-        if (imageOptions != null) {
-            if (imageOptions.width() != -1) {
-                width = imageOptions.width();
-            }
-            if (imageOptions.height() != -1) {
-                height = imageOptions.height();
-            }
-        }
-        definition.put("width", String.valueOf(width));
-        definition.put("height", String.valueOf(height));
+  private static void setSize(
+      ExecutableElement method, Path imagePath, Map<String, Object> definition) throws IOException {
+    BufferedImage image = ImageIO.read(imagePath.toFile());
+    int width = image.getWidth();
+    int height = image.getHeight();
+    ImageOptions imageOptions = method.getAnnotation(ImageOptions.class);
+    if (imageOptions != null) {
+      if (imageOptions.width() != -1) {
+        width = imageOptions.width();
+      }
+      if (imageOptions.height() != -1) {
+        height = imageOptions.height();
+      }
     }
+    definition.put("width", String.valueOf(width));
+    definition.put("height", String.valueOf(height));
+  }
 }

@@ -46,13 +46,16 @@
             <artifactId>jsinterop-annotations</artifactId>
             <version>${com.google.jsinterop.annotations.version}</version>
         </dependency>
-
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
             <version>${commons.io.version}</version>
         </dependency>
-
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-text</artifactId>
+            <version>${commons.text.version}</version>
+        </dependency>
         <dependency>
             <groupId>com.google.auto</groupId>
             <artifactId>auto-common</artifactId>
@@ -82,7 +85,6 @@
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
         </dependency>
-
     </dependencies>
 
     <build>

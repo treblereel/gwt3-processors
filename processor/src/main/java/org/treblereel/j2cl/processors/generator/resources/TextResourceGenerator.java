@@ -16,6 +16,8 @@
 
 package org.treblereel.j2cl.processors.generator.resources;
 
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
@@ -25,9 +27,6 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
-
-import freemarker.template.Template;
-import freemarker.template.TemplateException;
 import org.treblereel.j2cl.processors.common.resources.ResourcePrototype;
 import org.treblereel.j2cl.processors.common.resources.TextResource;
 import org.treblereel.j2cl.processors.context.AptContext;
@@ -35,37 +34,37 @@ import org.treblereel.j2cl.processors.exception.GenerationException;
 
 class TextResourceGenerator extends AbstractResourceGenerator {
 
-    private Template template;
+  private Template template;
 
-    TextResourceGenerator(AptContext context) {
-        super(
-                context,
-                TextResource.class,
-                TextResource.class.getAnnotation(ResourcePrototype.DefaultExtensions.class));
+  TextResourceGenerator(AptContext context) {
+    super(
+        context,
+        TextResource.class,
+        TextResource.class.getAnnotation(ResourcePrototype.DefaultExtensions.class));
+  }
+
+  @Override
+  void initializer(Map<String, Object> root, TypeElement clientBundle, ExecutableElement method) {
+    String resource = lookupResource(method);
+    String encoded = write(resource, method, s -> "return " + s);
+    Map<String, Object> definition = new HashMap<>();
+    definition.put("name", method.getSimpleName().toString());
+    definition.put("impl", encoded);
+
+    StringOutputStream os = new StringOutputStream();
+    try (Writer out = new OutputStreamWriter(os, StandardCharsets.UTF_8)) {
+      if (template == null) {
+        template = cfg.getTemplate("textresource.ftlh");
+      }
+      template.process(definition, out);
+      root.put("initializer", os.toString());
+    } catch (TemplateException | IOException e) {
+      throw new GenerationException(e);
     }
+  }
 
-    @Override
-    void initializer(Map<String, Object> root, TypeElement clientBundle, ExecutableElement method) {
-        String resource = lookupResource(method);
-        String encoded = write(resource, method, s -> "return " + s);
-        Map<String, Object> definition = new HashMap<>();
-        definition.put("name", method.getSimpleName().toString());
-        definition.put("impl", encoded);
-
-        StringOutputStream os = new StringOutputStream();
-        try (Writer out = new OutputStreamWriter(os, StandardCharsets.UTF_8)) {
-            if (template == null) {
-                template = cfg.getTemplate("textresource.ftlh");
-            }
-            template.process(definition, out);
-            root.put("initializer", os.toString());
-        } catch (TemplateException | IOException e) {
-            throw new GenerationException(e);
-        }
-    }
-
-    private String lookupResource(ExecutableElement method) {
-        URL resource = getResource(method, defaultExtensions.value());
-        return readURLAsString(resource, method);
-    }
+  private String lookupResource(ExecutableElement method) {
+    URL resource = getResource(method, defaultExtensions.value());
+    return readURLAsString(resource, method);
+  }
 }
