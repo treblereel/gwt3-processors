@@ -37,6 +37,8 @@ public interface ImageResource extends ResourcePrototype {
   /** Returns the width of the image. */
   int getWidth();
 
+  String getSrc();
+
   /** Specifies additional options to control how an image is bundled. */
   @Documented
   @Retention(RetentionPolicy.RUNTIME)

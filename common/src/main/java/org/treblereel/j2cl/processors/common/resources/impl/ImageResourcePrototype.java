@@ -26,44 +26,48 @@ import org.treblereel.j2cl.processors.common.resources.ImageResource;
 public class ImageResourcePrototype implements ImageResource {
 
   private final String name;
-  private final String url;
+  private final String src;
   private final int width;
   private final int height;
 
   /** Only called by generated code. */
-  public ImageResourcePrototype(String name, String url, int width, int height) {
+  public ImageResourcePrototype(String name, String src, int width, int height) {
     this.name = name;
     this.height = height;
     this.width = width;
-    this.url = url;
+    this.src = src;
   }
 
-  /** Exists for testing purposes, not part of the ImageResource interface. */
-  public int getHeight() {
-    return height;
-  }
-
+  @Override
   /** Exists for testing purposes, not part of the ImageResource interface. */
   public int getWidth() {
     return width;
+  }
+
+  @Override
+  /** Exists for testing purposes, not part of the ImageResource interface. */
+  public int getHeight() {
+    return height;
   }
 
   /** Returns the Image */
   @Override
   public Image getImage() {
     Image image = (Image) document.createElement("img");
-    image.src = url;
+    image.src = src;
     image.name = name;
     image.width = width;
     image.height = height;
     return image;
   }
 
+  @Override
   public String getName() {
     return name;
   }
 
-  public String getURL() {
-    return url;
+  @Override
+  public String getSrc() {
+    return src;
   }
 }
