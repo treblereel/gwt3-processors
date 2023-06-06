@@ -16,15 +16,14 @@
 
 package org.treblereel.j2cl.processors.test;
 
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-
-public class ResourcesTest {
+public class TextResourcesTest {
 
   @Test
   public void testSmallTxt() {
@@ -48,6 +47,12 @@ public class ResourcesTest {
   public void testFromResourceFolder() {
     String content = readFileAsString("test.js");
     assertEquals(content, TextTestResourceImpl.INSTANCE.getFromResourceFolder().getText());
+  }
+
+  @Test
+  public void testNoSource() {
+    String content = readFileAsString("getNoSource.txt");
+    assertEquals(content, TextTestResourceImpl.INSTANCE.getNoSource().getText());
   }
 
   private String readFileAsString(String fileName) {

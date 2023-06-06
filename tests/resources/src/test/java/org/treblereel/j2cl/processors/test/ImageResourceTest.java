@@ -17,6 +17,7 @@ package org.treblereel.j2cl.processors.test;
 
 import static org.treblereel.j2cl.processors.common.resources.ImageResource.*;
 
+import org.junit.Test;
 import org.treblereel.j2cl.processors.annotations.GWT3Resource;
 import org.treblereel.j2cl.processors.common.resources.ClientBundle;
 import org.treblereel.j2cl.processors.common.resources.ImageResource;
@@ -65,5 +66,74 @@ public class ImageResourceTest {
 
     @Source("logo.png")
     ImageResource linuxLogo();
+  }
+
+  @Test
+  public void testAnimated() {}
+
+  @Test
+  public void testComplexLossy() {
+    // Test the complexLossy() method
+    // Assert expected behavior
+  }
+
+  @Test
+  public void testI16x16() {
+    // Test the i16x16() method
+    // Assert expected behavior
+  }
+
+  @Test
+  public void testI32x32() {
+    // Test the i32x32() method
+    // Assert expected behavior
+  }
+
+  @Test
+  public void testI64x64() {
+    // Test the i64x64() method
+    // Assert expected behavior
+  }
+
+  @Test
+  public void testI64x64Dup() {
+    // Test the i64x64Dup() method
+    // Assert expected behavior
+  }
+
+  @Test
+  public void testI64x64Dup2() {
+    // Test the i64x64Dup2() method
+    // Assert expected behavior
+  }
+
+  @Test
+  public void testLargeLossless() {
+    // Test the largeLossless() method
+    // Assert expected behavior
+  }
+
+  @Test
+  public void testLargeLossy() {
+    // Test the largeLossy() method
+    // Assert expected behavior
+  }
+
+  @Test
+  public void testScaledDown() {
+    // Test the scaledDown() method
+    // Assert expected behavior
+  }
+
+  @Test
+  public void testScaledUp() {
+    // Test the scaledUp() method
+    // Assert expected behavior
+  }
+
+  @Test
+  public void testLinuxLogo() {
+    // Test the linuxLogo() method
+    // Assert expected behavior
   }
 }
