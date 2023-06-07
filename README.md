@@ -144,5 +144,39 @@ It contains the following features:
       @TranslationKey(key = "greetings", defaultValue = "Hello World!")
       String hello();
   ```
-  
+
+* *@GWT3Resource* is a lightweight port of GWT2 resources. Its main purpose is to embed various resources into the JavaScript bundle.
+
+  Here we declared a bundle of the resources that will be embedded into the JavaScript bundle:
+  ```java
+      @GWT3Resource
+      public interface CombinedClientBundle extends ClientBundle {
+
+          @Source("logo.png")
+          ImageResource linuxLogo();
+
+          TextResource welcome();
+
+          @DataResource.MimeType("audio/mpeg")
+          @Source("alarmloop.mp3")
+          DataResource resourceMimeTypeAnnotationAudioOgg();
+     }
+  ```
+  Later,  we can use it like this:
+
+  ```java
+       CombinedClientBundle resources = CombinedClientBundleImpl.INSTANCE;
+
+        DomGlobal.document.body.appendChild(resources.linuxLogo().getImage());
+
+        HTMLDivElement container = (HTMLDivElement) DomGlobal.document.createElement("div");
+        DomGlobal.document.body.appendChild(container);
+        container.textContent = resources.welcome().getText();
+
+        HTMLAudioElement audio = (HTMLAudioElement) DomGlobal.document.createElement("audio");
+        DomGlobal.document.body.appendChild(audio);
+        audio.src = resources.resourceMimeTypeAnnotationAudioOgg().asString();
+        audio.controls = true;
+  ```  
+
 Take a look at tests for more details.
