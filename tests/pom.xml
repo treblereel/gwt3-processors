@@ -5,7 +5,7 @@
 
   <groupId>org.treblereel.j2cl</groupId>
   <artifactId>tests-parent</artifactId>
-  <version>0.5</version>
+  <version>0.5.1</version>
   <packaging>pom</packaging>
 
   <name>GWT3 processors Tests</name>
@@ -30,16 +30,18 @@
     <elemental2.version>1.1.0</elemental2.version>
     <!-- CI -->
     <j2cl.version>0.10.0-3c97afeac</j2cl.version>
-
+    <junit.version>4.11</junit.version>
   </properties>
 
   <modules>
     <module>es6shim</module>
     <module>entrypoint</module>
     <module>exports</module>
+    <module>translation/pom_no_bundle.xml</module>
     <module>translation/pom.xml</module>
     <module>translation/pom_fr.xml</module>
     <module>translation/pom_fr_nr.pom</module>
+    <module>resources</module>
   </modules>
 
   <dependencyManagement>
@@ -94,6 +96,12 @@
         <groupId>com.vertispan.j2cl</groupId>
         <artifactId>junit-emul</artifactId>
         <version>${j2cl.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>${junit.version}</version>
+        <scope>test</scope>
       </dependency>
     </dependencies>
 

@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.treblereel.j2cl.processors</groupId>
     <artifactId>parent</artifactId>
-    <version>0.5</version>
+    <version>0.5.1</version>
   </parent>
 
   <artifactId>annotations</artifactId>
@@ -34,6 +34,14 @@
     <name>Treblereel</name>
     <url>https://github.com/treblereel</url>
   </organization>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.treblereel.j2cl.processors</groupId>
+      <artifactId>common</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies>
 
   <build>
     <resources>
