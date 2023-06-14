@@ -19,7 +19,7 @@
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
 
-    <maven.j2cl.plugin>0.20</maven.j2cl.plugin>
+    <maven.j2cl.plugin>0.21-SNAPSHOT</maven.j2cl.plugin>
     <maven.surefire.plugin.version>2.17</maven.surefire.plugin.version>
     <maven.deploy.plugin.version>2.8.2</maven.deploy.plugin.version>
     <maven.jasmine.plugin.version>3.0-beta-02</maven.jasmine.plugin.version>
@@ -29,7 +29,7 @@
     <jsinterop.base.version>1.0.0</jsinterop.base.version>
     <elemental2.version>1.1.0</elemental2.version>
     <!-- CI -->
-    <j2cl.version>0.10.0-3c97afeac</j2cl.version>
+    <j2cl.version>0.11.0-9336533b6</j2cl.version>
     <junit.version>4.11</junit.version>
   </properties>
 
@@ -42,6 +42,7 @@
     <module>translation/pom_fr.xml</module>
     <module>translation/pom_fr_nr.xml</module>
     <module>resources</module>
+    <module>commons</module>
   </modules>
 
   <dependencyManagement>

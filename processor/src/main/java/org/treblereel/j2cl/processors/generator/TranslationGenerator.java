@@ -169,7 +169,7 @@ public class TranslationGenerator extends AbstractGenerator {
     String key = getKey(method);
     JsMessage asJsMessage = toJsMessage(key, translationKey.defaultValue());
     validatePlaceHolders(method, asJsMessage);
-    String jsMethodName =  utils.createDeclarationMethodDescriptor(method).getMangledName();
+    String jsMethodName = utils.createDeclarationMethodDescriptor(method).getMangledName();
 
     sb.append(impl);
     sb.append(".prototype.");
