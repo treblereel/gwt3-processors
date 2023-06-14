@@ -19,33 +19,32 @@ import elemental2.dom.HTMLStyleElement;
 
 public class StyleInjector {
 
-    private final String styleBody;
+  private final String styleBody;
 
-    public static StyleInjector injectStyleSheet(String contents) {
-        return new StyleInjector(contents);
-    }
+  public static StyleInjector injectStyleSheet(String contents) {
+    return new StyleInjector(contents);
+  }
 
-    private StyleInjector(String styleBody) {
-        this.styleBody = styleBody;
-    }
+  private StyleInjector(String styleBody) {
+    this.styleBody = styleBody;
+  }
 
-    private HTMLStyleElement createElement(String contents) {
-        HTMLStyleElement style = (HTMLStyleElement) DomGlobal.document.createElement("style");
-        style.setAttribute("language", "text/css");
-        style.innerHTML = contents;
-        return style;
-    }
+  private HTMLStyleElement createElement(String contents) {
+    HTMLStyleElement style = (HTMLStyleElement) DomGlobal.document.createElement("style");
+    style.setAttribute("language", "text/css");
+    style.innerHTML = contents;
+    return style;
+  }
 
-    public HTMLStyleElement injectStyleSheet() {
-        HTMLStyleElement style = createElement(styleBody);
-        DomGlobal.document.head.appendChild(style);
-        return style;
-    }
+  public HTMLStyleElement injectStyleSheet() {
+    HTMLStyleElement style = createElement(styleBody);
+    DomGlobal.document.head.appendChild(style);
+    return style;
+  }
 
-    public HTMLStyleElement injectStyleSheetAtStart() {
-        HTMLStyleElement style = createElement(styleBody);
-        DomGlobal.document.head.insertBefore(style, DomGlobal.document.head.firstChild);
-        return style;
-    }
-
+  public HTMLStyleElement injectStyleSheetAtStart() {
+    HTMLStyleElement style = createElement(styleBody);
+    DomGlobal.document.head.insertBefore(style, DomGlobal.document.head.firstChild);
+    return style;
+  }
 }

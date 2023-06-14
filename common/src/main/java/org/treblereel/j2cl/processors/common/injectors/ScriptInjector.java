@@ -19,72 +19,80 @@ import elemental2.dom.DomGlobal;
 import elemental2.dom.HTMLDocument;
 import elemental2.dom.HTMLScriptElement;
 import elemental2.dom.Window;
-
-import java.util.function.Consumer;
+import jsinterop.annotations.JsFunction;
 
 public class ScriptInjector {
 
-    private Window window = DomGlobal.window;
+  public static final Window TOP_WINDOW = DomGlobal.window;
+  public Window window;
 
-    private HTMLScriptElement style;
+  private HTMLScriptElement scriptElement;
 
-    private ScriptInjector(HTMLScriptElement style) {
-        this.style = style;
-    }
+  private ScriptInjector(HTMLScriptElement scriptElement) {
+    this.scriptElement = scriptElement;
+  }
 
-    public static ScriptInjector fromString(String contents) {
-        return fromString(contents, null, null);
-    }
+  public static ScriptInjector fromString(String contents) {
+    return fromString(contents, null, null);
+  }
 
-    public static ScriptInjector fromString(String contents, Consumer<HTMLScriptElement> onResolve) {
-        return fromString(contents, onResolve, null);
+  public static ScriptInjector fromString(String contents, Callback onResolve) {
+    return fromString(contents, onResolve, null);
+  }
 
-    }
+  public static ScriptInjector fromString(String contents, Callback onResolve, Callback onReject) {
+    HTMLScriptElement element = createElement(onResolve, onReject);
+    element.text = contents;
+    return new ScriptInjector(element);
+  }
 
-    public static ScriptInjector fromString(String contents, Consumer<HTMLScriptElement> onResolve, Consumer<HTMLScriptElement> onReject) {
-        HTMLScriptElement element = createElement(onResolve, onReject);
-        element.text = contents;
-        return new ScriptInjector(element);
-    }
+  public static ScriptInjector fromUrl(String url) {
+    return fromUrl(url, null, null);
+  }
 
-    public static ScriptInjector fromUrl(String url) {
-        return fromUrl(url, null, null);
-    }
+  public static ScriptInjector fromUrl(String url, Callback onResolve) {
+    return fromUrl(url, onResolve, null);
+  }
 
-    public static ScriptInjector fromUrl(String url, Consumer<HTMLScriptElement> onResolve) {
-        return fromUrl(url, onResolve, null);
-    }
+  public static ScriptInjector fromUrl(String url, Callback onResolve, Callback onReject) {
+    HTMLScriptElement element = createElement(onResolve, onReject);
+    element.src = url;
+    return new ScriptInjector(element);
+  }
 
+  private static HTMLScriptElement createElement(Callback onResolve, Callback onReject) {
+    HTMLScriptElement script = (HTMLScriptElement) DomGlobal.document.createElement("script");
+    script.addEventListener(
+        "load",
+        (e) -> {
+          if (onResolve != null) {
+            onResolve.accept(script);
+          }
+        });
 
-    public static ScriptInjector fromUrl(String url, Consumer<HTMLScriptElement> onResolve, Consumer<HTMLScriptElement> onReject) {
-        HTMLScriptElement element = createElement(onResolve, onReject);
-        element.src = url;
-        return new ScriptInjector(element);
-    }
+    script.addEventListener(
+        "error",
+        (e) -> {
+          if (onReject != null) {
+            onReject.accept(script);
+          }
+        });
+    script.type = "text/javascript";
+    return script;
+  }
 
-    private static HTMLScriptElement createElement(Consumer<HTMLScriptElement> onResolve, Consumer<HTMLScriptElement> onReject) {
-        HTMLScriptElement script = (HTMLScriptElement) DomGlobal.document.createElement("script");
-        if (onResolve != null) {
-            script.onreadystatechange = (e) -> {
-                onResolve.accept(script);
-                return null;
-            };
-        }
-        if (onReject != null) {
-            script.onerror = (e) -> {
-                onReject.accept(script);
-                return null;
-            };
-        }
-        return script;
-    }
+  public ScriptInjector setWindow(Window window) {
+    this.window = window;
+    return this;
+  }
 
-    public ScriptInjector setWindow(Window window) {
-        this.window = window;
-        return this;
-    }
+  public void inject() {
+    ((HTMLDocument) Reflect.get(window, "document")).head.appendChild(scriptElement);
+  }
 
-    public void inject() {
-        ((HTMLDocument) Reflect.get(window, "document")).head.appendChild(style);
-    }
+  @JsFunction
+  @FunctionalInterface
+  public interface Callback {
+    void accept(HTMLScriptElement script);
+  }
 }
