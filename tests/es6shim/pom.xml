@@ -5,8 +5,7 @@
 
   <artifactId>es6shim-tests</artifactId>
   <groupId>org.treblereel.j2cl</groupId>
-  <version>0.5.1</version>
-
+  <version>0.6</version>
   <packaging>jar</packaging>
 
   <name>ES6SHIM Tests</name>
@@ -26,8 +25,8 @@
     <maven.surefire.plugin>3.1.0</maven.surefire.plugin>
     <maven.source.plugin>3.0.1</maven.source.plugin>
     <maven.license.plugin>3.0</maven.license.plugin>
-    <maven.j2cl.plugin>0.20</maven.j2cl.plugin>
-    <maven.j2cl.version>0.10.0-3c97afeac</maven.j2cl.version>
+    <maven.j2cl.plugin>0.21.0</maven.j2cl.plugin>
+    <maven.j2cl.version>0.11.0-9336533b6</maven.j2cl.version>
     <maven.jasmine.plugin.version>3.0-beta-02</maven.jasmine.plugin.version>
 
     <jsinterop.annotations.version>2.0.0</jsinterop.annotations.version>
@@ -102,7 +101,7 @@
       <plugin>
         <groupId>com.vertispan.j2cl</groupId>
         <artifactId>j2cl-maven-plugin</artifactId>
-        <version>0.20</version>
+        <version>${maven.j2cl.plugin}</version>
         <configuration>
           <compilationLevel>ADVANCED</compilationLevel>
           <annotationProcessorMode>IGNORE_MAVEN</annotationProcessorMode>

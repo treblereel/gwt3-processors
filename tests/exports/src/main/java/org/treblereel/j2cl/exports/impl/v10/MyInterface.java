@@ -7,10 +7,10 @@ import org.treblereel.j2cl.processors.annotations.GWT3Export;
 @JsType
 public class MyInterface implements org.treblereel.j2cl.exports.apis.MyInterface {
 
-    @JsMethod
-    @GWT3Export
-    public String test1(String s) {
-        return s;
-    };
-
+  @JsMethod
+  @GWT3Export
+  public String test1(String s) {
+    return s;
+  }
+  ;
 }

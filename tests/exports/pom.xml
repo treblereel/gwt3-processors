@@ -5,7 +5,8 @@
 
   <groupId>org.treblereel.j2cl</groupId>
   <artifactId>exports</artifactId>
-  <version>0.5.1</version>
+  <version>0.6</version>
+  <packaging>jar</packaging>
 
   <name>GWTExports Tests</name>
   <description>Test cases for the GWTExports</description>
@@ -24,7 +25,7 @@
     <maven.surefire.plugin>3.1.0</maven.surefire.plugin>
     <maven.source.plugin>3.0.1</maven.source.plugin>
     <maven.license.plugin>3.0</maven.license.plugin>
-    <maven.j2cl.plugin>0.20</maven.j2cl.plugin>
+    <maven.j2cl.plugin>0.21.0</maven.j2cl.plugin>
     <maven.jasmine.plugin.version>3.0-beta-02</maven.jasmine.plugin.version>
 
     <jsinterop.annotations.version>2.0.0</jsinterop.annotations.version>

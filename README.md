@@ -76,8 +76,8 @@ It contains the following features:
     });
    ```
 
-* *@TranslationBundle* j2cl-maven-plugin 0.20 brings us support of Closure's `.xtb` translation bundles that are a very effective way to translate your application.
-    * Note: at the moment, `.xtb` support is only available for j2cl-maven-plugin 0.20 and above and works only in ADVANCED mode, otherwise default values will be used.
+* *@TranslationBundle* j2cl-maven-plugin 0.21 brings us support of Closure's `.xtb` translation bundles that are a very effective way to translate your application.
+    * Note: at the moment, `.xtb` support is only available for j2cl-maven-plugin 0.21 and above and works only in ADVANCED mode, otherwise default values will be used.
 
   To use `@TranslationBundle`, you need to do the following steps:
 

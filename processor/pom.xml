@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.treblereel.j2cl.processors</groupId>
         <artifactId>parent</artifactId>
-        <version>0.5.1</version>
+        <version>0.6</version>
     </parent>
 
     <artifactId>processors</artifactId>
@@ -39,6 +39,11 @@
         <dependency>
             <groupId>org.treblereel.j2cl.processors</groupId>
             <artifactId>annotations</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.treblereel.j2cl.processors</groupId>
+            <artifactId>utils</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -79,7 +84,7 @@
         <dependency>
             <groupId>com.google.javascript</groupId>
             <artifactId>closure-compiler</artifactId>
-            <version>v20220301</version>
+            <version>v20221004</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

@@ -1,0 +1,1 @@
+function myFunction2() { return 'TEST2'; }

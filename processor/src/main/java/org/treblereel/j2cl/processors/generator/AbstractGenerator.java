@@ -28,13 +28,17 @@ import javax.tools.FileObject;
 import javax.tools.StandardLocation;
 import org.treblereel.j2cl.processors.context.AptContext;
 import org.treblereel.j2cl.processors.exception.GenerationException;
+import org.treblereel.j2cl.processors.utils.J2CLUtils;
 
 public abstract class AbstractGenerator {
 
   protected final AptContext context;
 
+  protected final J2CLUtils utils;
+
   public AbstractGenerator(AptContext context, Class<? extends Annotation> annotation) {
     this.context = context;
+    this.utils = new J2CLUtils(context.getProcessingEnv());
     context.register(annotation, this);
   }
 
