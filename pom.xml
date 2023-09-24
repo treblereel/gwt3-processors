@@ -50,7 +50,7 @@
     <maven.release.plugin.version>2.5.3</maven.release.plugin.version>
     <nexus.staging.maven.plugin.version>1.6.7</nexus.staging.maven.plugin.version>
     <maven.scm.provider.gitexe.plugin.version>1.9.5</maven.scm.provider.gitexe.plugin.version>
-    <maven.fmt.plugin>2.9</maven.fmt.plugin>
+    <maven.fmt.plugin>2.20</maven.fmt.plugin>
     <maven.javadoc.plugin>3.0.1</maven.javadoc.plugin>
     <maven.source.plugin>3.0.1</maven.source.plugin>
     <maven.gpg.plugin>1.6</maven.gpg.plugin>
@@ -117,7 +117,7 @@
           </configuration>
         </plugin>
         <plugin>
-          <groupId>com.coveo</groupId>
+          <groupId>com.spotify.fmt</groupId>
           <artifactId>fmt-maven-plugin</artifactId>
           <version>${maven.fmt.plugin}</version>
         </plugin>
