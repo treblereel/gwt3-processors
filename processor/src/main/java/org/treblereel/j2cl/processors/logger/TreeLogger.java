@@ -27,17 +27,23 @@ public abstract class TreeLogger {
    */
   public abstract static class HelpInfo {
 
-    /** @return the text to use for an anchor if not null and getURL is non-null. */
+    /**
+     * @return the text to use for an anchor if not null and getURL is non-null.
+     */
     public String getAnchorText() {
       return null;
     }
 
-    /** @return the prefix to go before the link. */
+    /**
+     * @return the prefix to go before the link.
+     */
     public String getPrefix() {
       return "More info: ";
     }
 
-    /** @return a URL containing extra information about the problem, or null if none. */
+    /**
+     * @return a URL containing extra information about the problem, or null if none.
+     */
     public URL getURL() {
       return null;
     }

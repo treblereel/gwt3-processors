@@ -19,8 +19,17 @@ package org.treblereel.j2cl.processors.generator;
 import com.google.auto.common.MoreElements;
 import com.google.auto.common.MoreTypes;
 import com.google.j2cl.transpiler.ast.DeclaredTypeDescriptor;
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
+import freemarker.template.TemplateExceptionHandler;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.lang.model.element.Element;
@@ -28,7 +37,9 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import jsinterop.annotations.JsType;
 import org.treblereel.j2cl.processors.annotations.ES6Module;
@@ -36,8 +47,27 @@ import org.treblereel.j2cl.processors.annotations.GWT3EntryPoint;
 import org.treblereel.j2cl.processors.annotations.GWT3Export;
 import org.treblereel.j2cl.processors.context.AptContext;
 import org.treblereel.j2cl.processors.exception.GenerationException;
+import org.treblereel.j2cl.processors.generator.dto.ExportDTO;
+import org.treblereel.j2cl.processors.generator.dto.MethodDTO;
+import org.treblereel.j2cl.processors.generator.dto.PropertyDTO;
+import org.treblereel.j2cl.processors.generator.resources.StringOutputStream;
 
 public class GWT3ExportGenerator extends AbstractGenerator {
+
+  protected final Configuration cfg = new Configuration(Configuration.VERSION_2_3_29);
+
+  {
+    cfg.setClassForTemplateLoading(this.getClass(), "/templates/resources");
+    cfg.setDefaultEncoding("UTF-8");
+    cfg.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
+    cfg.setLogTemplateExceptions(false);
+    cfg.setWrapUncheckedExceptions(true);
+    cfg.setFallbackOnNullLoopVariable(false);
+  }
+
+  private Template template;
+
+  private final Map<TypeElement, ExportDTO> exportDTOs = new HashMap<>();
 
   public GWT3ExportGenerator(AptContext context) {
     super(context, GWT3Export.class);
@@ -54,28 +84,140 @@ public class GWT3ExportGenerator extends AbstractGenerator {
           exports.put(checkClazz(parent), new HashSet<>());
         }
         exports.get(parent).add(checkMethod(element));
+
+        if (!exportDTOs.containsKey(parent)) {
+          exportDTOs.put(parent, getExportDTO(parent));
+        }
+
+        exportDTOs.get(parent).addMethod(getMethodDTO(parent, element));
+      } else if (element.getKind().equals(ElementKind.FIELD)) {
+        TypeElement parent = (TypeElement) element.getEnclosingElement();
+        if (!exports.containsKey(parent)) {
+          exports.put(checkClazz(parent), new HashSet<>());
+        }
+        if (!exportDTOs.containsKey(parent)) {
+          exportDTOs.put(parent, getExportDTO(parent));
+        }
+        exportDTOs.get(parent).addProperty(getPropertyDTO(element));
       } else if (element.getKind().isClass()) {
         TypeElement parent = (TypeElement) element;
+        exportDTOs.put(parent, getExportDTO(parent));
+
         Set<ExecutableElement> methods =
             ElementFilter.methodsIn(parent.getEnclosedElements()).stream()
-                .filter(elm -> elm.getModifiers().contains(Modifier.PUBLIC))
+                .filter(elm -> !elm.getModifiers().contains(Modifier.PRIVATE))
                 .filter(elm -> !elm.getModifiers().contains(Modifier.NATIVE))
                 .filter(elm -> !elm.getModifiers().contains(Modifier.ABSTRACT))
                 .collect(Collectors.toSet());
-        exports.put(checkClazz(parent), methods);
+        exports.put(checkClazz(parent), new HashSet<>());
+        exports.get(parent).addAll(methods);
+
+        ElementFilter.methodsIn(parent.getEnclosedElements()).stream()
+            .filter(elm -> !elm.getModifiers().contains(Modifier.PRIVATE))
+            .filter(elm -> !elm.getModifiers().contains(Modifier.NATIVE))
+            .filter(elm -> !elm.getModifiers().contains(Modifier.ABSTRACT))
+            .forEach(elm -> exportDTOs.get(parent).addMethod(getMethodDTO(parent, elm)));
+
+        ElementFilter.fieldsIn(parent.getEnclosedElements()).stream()
+            .filter(elm -> !elm.getModifiers().contains(Modifier.PRIVATE))
+            .filter(elm -> !elm.getModifiers().contains(Modifier.NATIVE))
+            .filter(elm -> !elm.getModifiers().contains(Modifier.ABSTRACT))
+            .forEach(elm -> exportDTOs.get(parent).addProperty(getPropertyDTO(elm)));
+      }
+    }
+    exportDTOs.forEach(this::generate);
+  }
+
+  private void generate(TypeElement typeElement, ExportDTO exportDTO) {
+    try {
+      if (template == null) {
+        template = cfg.getTemplate("export.ftlh");
+      }
+      String pkg = MoreElements.getPackage(typeElement).getQualifiedName().toString();
+
+      StringOutputStream os = new StringOutputStream();
+      try (Writer out = new OutputStreamWriter(os, StandardCharsets.UTF_8)) {
+        if (template == null) {
+          template = cfg.getTemplate("textresource.ftlh");
+        }
+        template.process(exportDTO, out);
+      } catch (TemplateException | IOException e) {
+        throw new GenerationException(e);
+      }
+      writeResource(typeElement.getSimpleName().toString() + "$$GWT3Export.js", pkg, os.toString());
+    } catch (Exception e) {
+      throw new GenerationException(e);
+    }
+  }
+
+  private ExportDTO getExportDTO(TypeElement parent) {
+    checkClazz(parent);
+    TypeMirror type = context.getProcessingEnv().getTypeUtils().erasure(parent.asType());
+    String name = getExportName(parent);
+    String nameCtor = utils.getDefaultConstructor(parent).getMangledName();
+    return new ExportDTO(name, type.toString(), type.toString(), nameCtor);
+  }
+
+  private MethodDTO getMethodDTO(TypeElement parent, Element m) {
+    ExecutableElement method = checkMethod(m);
+    String methodName = getSimpleName(method);
+    DeclaredType declaredType = MoreTypes.asDeclared(parent.asType());
+    DeclaredTypeDescriptor enclosingTypeDescriptor =
+        utils.createDeclaredTypeDescriptor(declaredType);
+    String mangleName =
+        utils.createDeclarationMethodDescriptor(method, enclosingTypeDescriptor).getMangledName();
+    return new MethodDTO(methodName, mangleName, m.getModifiers().contains(Modifier.STATIC));
+  }
+
+  private PropertyDTO getPropertyDTO(Element method) {
+    VariableElement variableElement = checkProperty(method);
+    String name = getSimpleName(variableElement);
+    String mangleName = utils.createFieldDescriptor(variableElement).getMangledName();
+
+    return new PropertyDTO(name, mangleName);
+  }
+
+  private String getSimpleName(Element element) {
+    if (element.getAnnotation(GWT3Export.class) == null
+        || element.getAnnotation(GWT3Export.class).name().equals("<auto>")) {
+      return element.getSimpleName().toString();
+    } else {
+      return element.getAnnotation(GWT3Export.class).name();
+    }
+  }
+
+  private String getExportName(Element element) {
+    StringBuffer stringBuffer = new StringBuffer();
+    if (element.getAnnotation(GWT3Export.class) == null
+        || element.getAnnotation(GWT3Export.class).namespace().equals("<auto>")) {
+      stringBuffer
+          .append(MoreElements.getPackage(element).getQualifiedName().toString())
+          .append(".");
+    } else {
+      String namespace = element.getAnnotation(GWT3Export.class).namespace();
+      if (!namespace.isEmpty()) {
+        stringBuffer.append(namespace).append(".");
       }
     }
 
-    exports.forEach(this::generate);
+    if (element.getAnnotation(GWT3Export.class) == null
+        || element.getAnnotation(GWT3Export.class).name().equals("<auto>")) {
+      stringBuffer.append(element.getSimpleName().toString());
+    } else {
+      stringBuffer.append(element.getAnnotation(GWT3Export.class).name());
+    }
+    return stringBuffer.toString();
   }
 
   private ExecutableElement checkMethod(Element candidate) {
     ExecutableElement method = (ExecutableElement) candidate;
 
-    if (!method.getModifiers().contains(Modifier.PUBLIC)) {
+    if (method.getModifiers().contains(Modifier.PRIVATE)) {
       throw new GenerationException(
           method,
-          "Method, annotated with " + GWT3Export.class.getCanonicalName() + ", must be public");
+          "Method, annotated with "
+              + GWT3Export.class.getCanonicalName()
+              + ", must not be private");
     }
     if (method.getModifiers().contains(Modifier.ABSTRACT)) {
       throw new GenerationException(
@@ -91,6 +233,10 @@ public class GWT3ExportGenerator extends AbstractGenerator {
           "Method, annotated with " + GWT3Export.class.getCanonicalName() + ", mustn't be native");
     }
     return method;
+  }
+
+  private VariableElement checkProperty(Element element) {
+    return (VariableElement) element;
   }
 
   private TypeElement checkClazz(TypeElement parent) {
@@ -157,112 +303,5 @@ public class GWT3ExportGenerator extends AbstractGenerator {
     }
 
     return parent;
-  }
-
-  private void generate(TypeElement parent, Set<ExecutableElement> elements) {
-
-    StringBuffer source = new StringBuffer();
-    generateClassExport(parent, source);
-    generateMethods(parent, elements, source);
-
-    String className = parent.getSimpleName().toString();
-    String classPkg = MoreElements.getPackage(parent).getQualifiedName().toString();
-
-    writeResource(className + ".native.js", classPkg, source.toString());
-  }
-
-  private void generateMethods(
-      TypeElement parent, Set<ExecutableElement> elements, StringBuffer source) {
-    elements.forEach(method -> generateMethod(method, parent, source));
-  }
-
-  private void generateClassExport(TypeElement parent, StringBuffer source) {
-    generateClassWrapper(parent, source);
-    source.append(System.lineSeparator());
-
-    source.append("goog.exportSymbol('");
-    source.append(getTypeName(parent));
-    source.append("', _");
-    source.append(parent.getSimpleName());
-    source.append(");");
-    source.append(System.lineSeparator());
-  }
-
-  private void generateClassWrapper(TypeElement parent, StringBuffer source) {
-    String nameCtor = utils.getDefaultConstructor(parent).getMangledName();
-
-    source.append("class _");
-    source.append(parent.getSimpleName());
-    source.append(" extends ");
-    source.append(parent.getSimpleName().toString().replaceAll("_", "__"));
-    source.append(" {");
-    source.append(System.lineSeparator());
-
-    source.append("    constructor() {");
-    source.append(System.lineSeparator());
-    source.append("        super();");
-    source.append(System.lineSeparator());
-    source.append(String.format("        this.%s();", nameCtor));
-
-    source.append("    }");
-    source.append(System.lineSeparator());
-    source.append("}");
-    source.append(System.lineSeparator());
-  }
-
-  private String getTypeName(TypeElement parent) {
-    GWT3Export gwt3Export = parent.getAnnotation(GWT3Export.class);
-    String pkg = MoreElements.getPackage(parent).getQualifiedName().toString();
-    String clazz = parent.getSimpleName().toString();
-
-    if (gwt3Export != null) {
-      if (!gwt3Export.name().equals("<auto>") && !gwt3Export.name().isEmpty()) {
-        clazz = parent.getAnnotation(GWT3Export.class).name();
-      }
-      if (!gwt3Export.namespace().equals("<auto>")) {
-        pkg = gwt3Export.namespace();
-      }
-    }
-
-    return (!pkg.isEmpty() ? pkg + "." : "") + clazz;
-  }
-
-  private void generateMethod(ExecutableElement element, TypeElement parent, StringBuffer source) {
-
-    source.append("goog.exportSymbol('");
-    source.append(getTypeName(parent));
-    source.append(".");
-    if (!element.getModifiers().contains(Modifier.STATIC)) {
-      source.append("prototype.");
-    }
-
-    if (element.getAnnotation(GWT3Export.class) == null
-        || element.getAnnotation(GWT3Export.class).name().equals("<auto>")) {
-      source.append(element.getSimpleName().toString());
-    } else {
-      source.append(element.getAnnotation(GWT3Export.class).name());
-    }
-
-    source.append("', ");
-    source.append(parent.getSimpleName().toString().replaceAll("_", "__"));
-    getMethodName(element, parent, source);
-    source.append(");");
-    source.append(System.lineSeparator());
-  }
-
-  private void getMethodName(ExecutableElement element, TypeElement parent, StringBuffer source) {
-    DeclaredType declaredType = MoreTypes.asDeclared(parent.asType());
-
-    DeclaredTypeDescriptor enclosingTypeDescriptor =
-        utils.createDeclaredTypeDescriptor(declaredType);
-
-    String methodName =
-        utils.createDeclarationMethodDescriptor(element, enclosingTypeDescriptor).getMangledName();
-
-    source.append(".");
-    if (!element.getModifiers().contains(Modifier.STATIC)) {
-      source.append("prototype.");
-    }
-    source.append(methodName);
   }
 }
