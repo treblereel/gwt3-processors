@@ -15,36 +15,84 @@
 package org.treblereel.j2cl.processors.common.injectors;
 
 import elemental2.dom.DomGlobal;
+import elemental2.dom.HTMLDocument;
+import elemental2.dom.HTMLElement;
 import elemental2.dom.HTMLStyleElement;
+import jsinterop.annotations.JsFunction;
 
 public class StyleInjector {
 
-  private final String styleBody;
+  public HTMLDocument document = DomGlobal.document;
 
-  public static StyleInjector injectStyleSheet(String contents) {
-    return new StyleInjector(contents);
+  private final HTMLElement styleElement;
+
+  private StyleInjector(HTMLElement styleElement) {
+    this.styleElement = styleElement;
   }
 
-  private StyleInjector(String styleBody) {
-    this.styleBody = styleBody;
+  public static StyleInjector fromString(String contents) {
+    HTMLElement element = createHTMLStyleElement();
+    element.textContent = contents;
+    return new StyleInjector(element);
   }
 
-  private HTMLStyleElement createElement(String contents) {
+  private static HTMLElement createHTMLStyleElement() {
     HTMLStyleElement style = (HTMLStyleElement) DomGlobal.document.createElement("style");
-    style.setAttribute("language", "text/css");
-    style.innerHTML = contents;
+    style.type = "text/css";
     return style;
   }
 
-  public HTMLStyleElement injectStyleSheet() {
-    HTMLStyleElement style = createElement(styleBody);
-    DomGlobal.document.head.appendChild(style);
+  private static HTMLElement createStyleElement(
+      HTMLElement style, Callback onResolve, Callback onReject) {
+    if (onResolve != null) {
+      style.onload = (e) -> onResolve.accept(style);
+    }
+    if (onReject != null) {
+      style.onerror =
+          (e) -> {
+            onReject.accept(style);
+            return null;
+          };
+    }
     return style;
   }
 
-  public HTMLStyleElement injectStyleSheetAtStart() {
-    HTMLStyleElement style = createElement(styleBody);
-    DomGlobal.document.head.insertBefore(style, DomGlobal.document.head.firstChild);
-    return style;
+  public static StyleInjector fromUrl(String url) {
+    return fromUrl(url, null);
+  }
+
+  public static StyleInjector fromUrl(String url, Callback onResolve) {
+    return fromUrl(url, onResolve, null);
+  }
+
+  public static StyleInjector fromUrl(String url, Callback onResolve, Callback onReject) {
+    HTMLElement element = createHTMLLinkElement(onResolve, onReject);
+    element.setAttribute("href", url);
+    return new StyleInjector(element);
+  }
+
+  private static HTMLElement createHTMLLinkElement(Callback onResolve, Callback onReject) {
+    HTMLElement style = (HTMLElement) DomGlobal.document.createElement("link");
+    style.setAttribute("rel", "stylesheet");
+    return createStyleElement(style, onResolve, onReject);
+  }
+
+  public StyleInjector setDocument(HTMLDocument document) {
+    this.document = document;
+    return this;
+  }
+
+  public void inject() {
+    document.head.appendChild(styleElement);
+  }
+
+  public void injectAtStart() {
+    document.head.insertBefore(styleElement, DomGlobal.document.head.firstChild);
+  }
+
+  @JsFunction
+  @FunctionalInterface
+  public interface Callback {
+    void accept(HTMLElement script);
   }
 }

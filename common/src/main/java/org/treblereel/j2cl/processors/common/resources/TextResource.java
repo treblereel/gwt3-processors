@@ -21,4 +21,8 @@ import org.treblereel.j2cl.processors.common.resources.ResourcePrototype.Default
 @DefaultExtensions(value = {".txt"})
 public interface TextResource extends ResourcePrototype {
   String getText();
+
+  void insureInjectedAsScript();
+
+  void insureInjectedAsStyle();
 }
