@@ -5,7 +5,7 @@
 
   <groupId>org.treblereel.j2cl</groupId>
   <artifactId>entrypoint-pojo-tests</artifactId>
-  <version>0.6</version>
+  <version>0.6.1</version>
 
   <name>GWT3 Entry Point Tests for Pojo class</name>
   <description>Test cases for the GWT3 Entry Point for Pojo class</description>
@@ -26,8 +26,9 @@
     <maven.license.plugin>3.0</maven.license.plugin>
     <maven.j2cl.plugin>0.21.0</maven.j2cl.plugin>
     <maven.j2cl.version>0.11.0-9336533b6</maven.j2cl.version>
-    <maven.jasmine.plugin.version>3.0-beta-02</maven.jasmine.plugin.version>
 
+    <selenium.chrome.driver.version>4.12.1</selenium.chrome.driver.version>
+    <junit.version>4.13.1</junit.version>
     <jsinterop.annotations.version>2.0.0</jsinterop.annotations.version>
     <jsinterop.base.version>1.0.0</jsinterop.base.version>
     <elemental2.version>1.1.0</elemental2.version>
@@ -61,22 +62,15 @@
 
     <!-- test dependencies -->
     <dependency>
-      <groupId>com.vertispan.j2cl</groupId>
-      <artifactId>junit-annotations</artifactId>
-      <version>${maven.j2cl.version}</version>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>${junit.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>com.vertispan.j2cl</groupId>
-      <artifactId>gwttestcase-emul</artifactId>
-      <version>${maven.j2cl.version}</version>
-      <classifier>sources</classifier>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.vertispan.j2cl</groupId>
-      <artifactId>junit-emul</artifactId>
-      <version>${maven.j2cl.version}</version>
+      <groupId>org.seleniumhq.selenium</groupId>
+      <artifactId>selenium-chrome-driver</artifactId>
+      <version>${selenium.chrome.driver.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -111,7 +105,8 @@
           </execution>
         </executions>
         <configuration>
-          <defaultWebappDirectory>${project.build.directory}/gwt/launcherDir</defaultWebappDirectory>
+          <webappDirectory>${project.build.directory}/j2cl/launcherDir</webappDirectory>
+          <initialScriptFilename>entrypoint-pojo-tests.js</initialScriptFilename>
           <compilationLevel>ADVANCED</compilationLevel>
           <annotationProcessorMode>IGNORE_MAVEN</annotationProcessorMode>
         </configuration>
@@ -121,7 +116,7 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>${maven.surefire.plugin}</version>
         <configuration>
-          <skipTests>true</skipTests>
+          <skipTests>false</skipTests>
         </configuration>
       </plugin>
       <plugin>
@@ -130,25 +125,6 @@
         <version>${maven.deploy.plugin.version}</version>
         <configuration>
           <skip>true</skip>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>com.github.searls</groupId>
-        <artifactId>jasmine-maven-plugin</artifactId>
-        <version>${maven.jasmine.plugin.version}</version>
-        <executions>
-          <execution>
-            <id>jasmine</id>
-            <goals>
-              <goal>test</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <jsTestSrcDir>src/test/jasmine</jsTestSrcDir>
-          <preloadSources>
-            <source>target/entrypoint-pojo-tests-${project.version}/entrypoint-pojo-tests/entrypoint-pojo-tests.js</source>
-          </preloadSources>
         </configuration>
       </plugin>
     </plugins>

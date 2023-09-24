@@ -44,7 +44,7 @@ public class ExportTestClass {
 
   @GWT3Export
   public Promise<String> promise1(String arg) {
-    return Promise.resolve(arg);
+    return Promise.resolve("resolved " + arg);
   }
 
   @GWT3Export

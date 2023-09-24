@@ -5,11 +5,11 @@
 
   <groupId>org.treblereel.j2cl</groupId>
   <artifactId>exports</artifactId>
-  <version>0.6</version>
+  <version>0.6.1</version>
   <packaging>jar</packaging>
 
-  <name>GWTExports Tests</name>
-  <description>Test cases for the GWTExports</description>
+  <name>GWTExports Tests ADVANCED mode</name>
+  <description>Test cases for the GWTExports ADVANCED mode</description>
   <url>https://github.com/treblereel/gwt3-processors</url>
 
   <properties>
@@ -26,7 +26,9 @@
     <maven.source.plugin>3.0.1</maven.source.plugin>
     <maven.license.plugin>3.0</maven.license.plugin>
     <maven.j2cl.plugin>0.21.0</maven.j2cl.plugin>
-    <maven.jasmine.plugin.version>3.0-beta-02</maven.jasmine.plugin.version>
+
+    <selenium.chrome.driver.version>4.12.1</selenium.chrome.driver.version>
+    <junit.version>4.13.1</junit.version>
 
     <jsinterop.annotations.version>2.0.0</jsinterop.annotations.version>
     <jsinterop.base.version>1.0.0</jsinterop.base.version>
@@ -55,6 +57,19 @@
       <groupId>com.google.elemental2</groupId>
       <artifactId>elemental2-dom</artifactId>
       <version>${elemental2.version}</version>
+    </dependency>
+    <!-- test dependencies -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.seleniumhq.selenium</groupId>
+      <artifactId>selenium-chrome-driver</artifactId>
+      <version>${selenium.chrome.driver.version}</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 
@@ -88,7 +103,8 @@
           </execution>
         </executions>
         <configuration>
-          <defaultWebappDirectory>${project.build.directory}/gwt/launcherDir</defaultWebappDirectory>
+          <webappDirectory>${project.build.directory}/j2cl/launcherDir</webappDirectory>
+          <initialScriptFilename>exports.js</initialScriptFilename>
           <compilationLevel>ADVANCED</compilationLevel>
           <annotationProcessorMode>IGNORE_MAVEN</annotationProcessorMode>
         </configuration>
@@ -98,7 +114,7 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>${maven.surefire.plugin}</version>
         <configuration>
-          <skipTests>true</skipTests>
+          <skipTests>false</skipTests>
         </configuration>
       </plugin>
       <plugin>
@@ -106,26 +122,7 @@
         <artifactId>maven-deploy-plugin</artifactId>
         <version>${maven.deploy.plugin.version}</version>
         <configuration>
-          <skip>true</skip>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>com.github.searls</groupId>
-        <artifactId>jasmine-maven-plugin</artifactId>
-        <version>${maven.jasmine.plugin.version}</version>
-        <executions>
-          <execution>
-            <id>jasmine</id>
-            <goals>
-              <goal>test</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <jsTestSrcDir>src/test/jasmine</jsTestSrcDir>
-          <preloadSources>
-            <source>target/exports-${project.version}/exports/exports.js</source>
-          </preloadSources>
+          <skip>false</skip>
         </configuration>
       </plugin>
     </plugins>
