@@ -155,7 +155,8 @@ public class GWT3ExportGenerator extends AbstractGenerator {
     TypeMirror type = context.getProcessingEnv().getTypeUtils().erasure(parent.asType());
     String name = getExportName(parent);
     String nameCtor = utils.getDefaultConstructor(parent).getMangledName();
-    return new ExportDTO(name, type.toString(), type.toString(), nameCtor);
+    boolean isNative = parent.getAnnotation(JsType.class) != null;
+    return new ExportDTO(name, type.toString(), type.toString(), nameCtor, isNative);
   }
 
   private MethodDTO getMethodDTO(TypeElement parent, Element m) {

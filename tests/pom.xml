@@ -36,7 +36,6 @@
 
   <modules>
     <module>exports</module>
-    <module>exports/bundle_jar_pom.xml</module>
     <module>es6shim</module>
     <module>entrypoint</module>
     <module>translation/pom_no_bundle.xml</module>

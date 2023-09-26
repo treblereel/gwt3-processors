@@ -484,7 +484,7 @@ public class J2CLUtils {
             variableElement.getAnnotationMirrors(),
             isNullMarked(getEnclosingType(variableElement)));
 
-    boolean isEnumConstant = asElement(variableElement.asType()).getKind().equals(ElementKind.ENUM);
+    boolean isEnumConstant = variableElement.getKind().equals(ElementKind.ENUM_CONSTANT);
     if (isEnumConstant) {
       // Enum fields are always non-nullable.
       thisTypeDescriptor = thisTypeDescriptor.toNonNullable();
@@ -529,10 +529,6 @@ public class J2CLUtils {
       return MoreTypes.asDeclared(typeMirror).asElement();
     }
     return types.asElement(typeMirror);
-  }
-
-  public TypeElement asTypeElement(TypeMirror typeMirror) {
-    return (TypeElement) asElement(typeMirror);
   }
 
   public TypeMirror erasure(TypeMirror typeMirror) {

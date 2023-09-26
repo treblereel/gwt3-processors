@@ -1,23 +1,25 @@
 goog.module('${module}$GWT3Export');
 
-goog.require('java.lang.Object');
-goog.require('nativebootstrap.Util');
-
 const EXPORT = goog.require('${target}');
+
+<#if isNative>
+goog.exportSymbol('${type}', EXPORT);
+<#else>
+const j_l_Object = goog.require('java.lang.Object$impl');
+const $Util = goog.require('nativebootstrap.Util$impl');
 
 class _EXPORT extends EXPORT {
     constructor() {
+        EXPORT.$clinit();
         super();
         this.${ctor}();
     }
 }
 
+$Util.$setClassMetadata(_EXPORT, '${module}');
 goog.exportSymbol('${type}', _EXPORT);
-goog.exportSymbol('${type}.prototype.constructor', EXPORT.$create__());
-
+</#if>
 
 <#list methods as method>
-    goog.exportSymbol('${type}.<#if !method.isStatic>prototype.</#if>${method.name}', _EXPORT.<#if !method.isStatic>prototype.</#if>${method.mangleName});
+goog.exportSymbol('${type}.<#if !method.isStatic>prototype.</#if>${method.name}', EXPORT.<#if !method.isStatic>prototype.</#if>${method.mangleName});
 </#list>
-
-exports = _EXPORT;

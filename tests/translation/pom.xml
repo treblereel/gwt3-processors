@@ -59,8 +59,6 @@
             <version>${elemental2.version}</version>
         </dependency>
 
-
-        <!-- test dependencies -->
         <dependency>
             <groupId>com.vertispan.j2cl</groupId>
             <artifactId>junit-annotations</artifactId>
@@ -71,7 +69,6 @@
             <groupId>com.vertispan.j2cl</groupId>
             <artifactId>gwttestcase-emul</artifactId>
             <version>${maven.j2cl.version}</version>
-            <classifier>sources</classifier>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -79,6 +76,12 @@
             <artifactId>junit-emul</artifactId>
             <version>${maven.j2cl.version}</version>
             <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.1</version>
         </dependency>
     </dependencies>
 

@@ -28,11 +28,14 @@ public class ExportDTO {
   private final Set<MethodDTO> methods = new HashSet<>();
   private final Set<PropertyDTO> properties = new HashSet<>();
 
-  public ExportDTO(String type, String module, String target, String ctor) {
+  private boolean isNative = false;
+
+  public ExportDTO(String type, String module, String target, String ctor, boolean isNative) {
     this.type = type;
     this.module = module;
     this.ctor = ctor;
     this.target = target;
+    this.isNative = isNative;
   }
 
   public void addMethod(MethodDTO methodDTO) {
@@ -65,5 +68,9 @@ public class ExportDTO {
 
   public String getTarget() {
     return target;
+  }
+
+  public boolean isIsNative() {
+    return isNative;
   }
 }
