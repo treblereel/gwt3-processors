@@ -128,6 +128,12 @@
                                         <exclude>jsinterop/base/**</exclude>
                                     </excludes>
                                 </filter>
+                                <filter>
+                                    <artifact>org.freemarker:freemarker</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
                             </filters>
                         </configuration>
                     </execution>
