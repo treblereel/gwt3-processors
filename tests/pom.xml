@@ -38,12 +38,9 @@
     <module>exports</module>
     <module>es6shim</module>
     <module>entrypoint</module>
-    <module>translation/pom_no_bundle.xml</module>
-    <module>translation/pom.xml</module>
-    <module>translation/pom_fr.xml</module>
-    <module>translation/pom_fr_nr.xml</module>
     <module>resources</module>
     <module>commons</module>
+    <module>translation</module>
   </modules>
 
   <dependencyManagement>
