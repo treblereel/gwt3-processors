@@ -59,9 +59,6 @@ public abstract class AbstractResourceGenerator {
 
   protected static final int MAX_STRING_CHUNK = 16383;
 
-  protected static final int MAX_ENCODED_SIZE = (2 << 15) - 1;
-  protected static final int MAX_INLINE_SIZE = 2 << 15;
-
   private Template template;
 
   protected final AptContext context;
@@ -179,15 +176,7 @@ public abstract class AbstractResourceGenerator {
   protected String readURLAsString(URL url, ExecutableElement method) {
     byte[] bytes = readURLAsBytes(url);
     if (bytes != null) {
-      if (bytes.length < MAX_INLINE_SIZE) {
-        return new String(bytes, StandardCharsets.UTF_8);
-      }
-      throw new GenerationException(
-          "Resource is too large to inline: "
-              + method.getEnclosingElement()
-              + "."
-              + method.getSimpleName()
-              + "()");
+      return new String(bytes, StandardCharsets.UTF_8);
     }
     return null;
   }

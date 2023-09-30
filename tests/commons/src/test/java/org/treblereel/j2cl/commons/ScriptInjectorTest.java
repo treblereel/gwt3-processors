@@ -31,7 +31,7 @@ public class ScriptInjectorTest {
   @Test
   public void testInjectScript() {
     String jsCode = "function myFunction() { return 'Hello, world!'; }";
-    ScriptInjector.fromString(jsCode).setWindow(ScriptInjector.TOP_WINDOW).inject();
+    ScriptInjector.fromString(jsCode).inject();
     String result = ((Window) Js.uncheckedCast(DomGlobal.window)).myFunction();
     assertEquals("Hello, world!", result);
   }
@@ -53,7 +53,6 @@ public class ScriptInjectorTest {
                 DomGlobal.console.error("Error loading script");
               }
             })
-        .setWindow(ScriptInjector.TOP_WINDOW)
         .inject();
   }
 }

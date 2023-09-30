@@ -17,7 +17,6 @@ package org.treblereel.j2cl.processors.utils;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static com.sun.tools.javac.code.Type.*;
 
 import com.google.auto.common.MoreElements;
 import com.google.auto.common.MoreTypes;
@@ -43,11 +42,6 @@ import com.google.j2cl.transpiler.ast.TypeVariable;
 import com.google.j2cl.transpiler.ast.Visibility;
 import com.google.j2cl.transpiler.frontend.javac.JsInteropAnnotationUtils;
 import com.google.j2cl.transpiler.frontend.javac.JsInteropUtils;
-import com.sun.tools.javac.code.Attribute;
-import com.sun.tools.javac.code.Symbol;
-import com.sun.tools.javac.code.TargetType;
-import com.sun.tools.javac.code.Type;
-import com.sun.tools.javac.code.TypeAnnotationPosition;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
@@ -349,8 +343,7 @@ public class J2CLUtils {
                     applyNullabilityAnnotations(
                         createDeclaredTypeDescriptor(typeElement.getSuperclass(), isNullMarked),
                         typeElement,
-                        position ->
-                            position.type == TargetType.CLASS_EXTENDS && position.type_index == -1))
+                        (obj) -> false))
         .setTypeParameterDescriptors(
             typeParameterElements.stream()
                 .map(TypeParameterElement::asType)
@@ -376,90 +369,16 @@ public class J2CLUtils {
   // Javac does not present TYPE_USE annotation in the returned type instances.
   private static TypeDescriptor applyParameterNullabilityAnnotations(
       TypeDescriptor typeDescriptor, ExecutableElement declarationMethodElement, int index) {
-    return applyNullabilityAnnotations(
-        typeDescriptor,
-        declarationMethodElement,
-        position ->
-            position.parameter_index == index
-                && position.type == TargetType.METHOD_FORMAL_PARAMETER);
+    return applyNullabilityAnnotations(typeDescriptor, declarationMethodElement, (obj) -> false);
+    // position ->
+    //    position.parameter_index == index
+    //        && position.type == TargetType.METHOD_FORMAL_PARAMETER);
   }
 
   private static TypeDescriptor applyNullabilityAnnotations(
       TypeDescriptor typeDescriptor,
       Element declarationMethodElement,
-      Predicate<TypeAnnotationPosition> positionSelector) {
-    List<Attribute.TypeCompound> methodAnnotations =
-        ((Symbol) declarationMethodElement).getRawTypeAttributes();
-    for (Attribute.TypeCompound methodAnnotation : methodAnnotations) {
-      TypeAnnotationPosition position = methodAnnotation.getPosition();
-      if (!positionSelector.test(position)) {
-        continue;
-      }
-      if (isNonNullAnnotation(methodAnnotation)) {
-        typeDescriptor =
-            applyNullabilityAnnotation(typeDescriptor, position.location, /* isNullable= */ false);
-      } else if (isNullableAnnotation(methodAnnotation)) {
-        typeDescriptor =
-            applyNullabilityAnnotation(typeDescriptor, position.location, /* isNullable= */ true);
-      }
-    }
-
-    return typeDescriptor;
-  }
-
-  private static TypeDescriptor applyNullabilityAnnotation(
-      TypeDescriptor typeDescriptor,
-      List<TypeAnnotationPosition.TypePathEntry> location,
-      boolean isNullable) {
-    if (location.isEmpty()) {
-      if (TypeDescriptors.isJavaLangVoid(typeDescriptor)) {
-        return typeDescriptor;
-      }
-      return isNullable ? typeDescriptor.toNullable() : typeDescriptor.toNonNullable();
-    }
-    TypeAnnotationPosition.TypePathEntry currentEntry = location.get(0);
-    List<TypeAnnotationPosition.TypePathEntry> rest = location.subList(1, location.size());
-    switch (currentEntry.tag) {
-      case TYPE_ARGUMENT:
-        DeclaredTypeDescriptor declaredTypeDescriptor = (DeclaredTypeDescriptor) typeDescriptor;
-        List<TypeDescriptor> replacements =
-            new ArrayList<>(declaredTypeDescriptor.getTypeArgumentDescriptors());
-        if (currentEntry.arg < replacements.size()) {
-          // Only apply the type argument annotation if the type is not raw.
-          replacements.set(
-              currentEntry.arg,
-              applyNullabilityAnnotation(replacements.get(currentEntry.arg), rest, isNullable));
-        }
-        return DeclaredTypeDescriptor.Builder.from(declaredTypeDescriptor)
-            .setTypeArgumentDescriptors(replacements)
-            .build();
-      case ARRAY:
-        ArrayTypeDescriptor arrayTypeDescriptor = (ArrayTypeDescriptor) typeDescriptor;
-        return ArrayTypeDescriptor.newBuilder()
-            .setComponentTypeDescriptor(
-                applyNullabilityAnnotation(
-                    arrayTypeDescriptor.getComponentTypeDescriptor(), rest, isNullable))
-            .setNullable(typeDescriptor.isNullable())
-            .build();
-      case INNER_TYPE:
-        /*        DeclaredTypeDescriptor innerType = (DeclaredTypeDescriptor) typeDescriptor;
-        // Consume all inner type annotation and only continue if does not relate to an outer type
-        // of the type in question.
-        int innerDepth = getInnerDepth(innerType);
-        int innerCount = countInner(rest) + 1;
-        if (innerCount != innerDepth) {
-          // Applies to outer type, not relevant for nullability, ignore.
-          return innerType;
-        }
-        return applyNullabilityAnnotation(
-                typeDescriptor, rest.subList(innerCount - 1, rest.size()), isNullable);*/
-        throw new UnsupportedOperationException("Not implemented yet");
-      case WILDCARD:
-        TypeVariable typeVariable = (TypeVariable) typeDescriptor;
-        return TypeVariable.createWildcardWithUpperBound(
-            applyNullabilityAnnotation(
-                typeVariable.getUpperBoundTypeDescriptor(), rest, isNullable));
-    }
+      Predicate<Object> positionSelector) {
     return typeDescriptor;
   }
 
@@ -565,7 +484,7 @@ public class J2CLUtils {
             variableElement.getAnnotationMirrors(),
             isNullMarked(getEnclosingType(variableElement)));
 
-    boolean isEnumConstant = asElement(variableElement.asType()).getKind().equals(ElementKind.ENUM);
+    boolean isEnumConstant = variableElement.getKind().equals(ElementKind.ENUM_CONSTANT);
     if (isEnumConstant) {
       // Enum fields are always non-nullable.
       thisTypeDescriptor = thisTypeDescriptor.toNonNullable();
@@ -603,17 +522,13 @@ public class J2CLUtils {
   }
 
   public Element asElement(TypeMirror typeMirror) {
-    if (typeMirror instanceof JCPrimitiveType) {
-      return ((JCPrimitiveType) typeMirror).asElement();
+    if (typeMirror.getKind().isPrimitive()) {
+      return MoreTypes.asElement(typeMirror);
     }
-    if (typeMirror instanceof Type) {
-      return ((Type) typeMirror).tsym;
+    if (typeMirror.getKind().equals(TypeKind.DECLARED)) {
+      return MoreTypes.asDeclared(typeMirror).asElement();
     }
     return types.asElement(typeMirror);
-  }
-
-  public TypeElement asTypeElement(TypeMirror typeMirror) {
-    return (TypeElement) asElement(typeMirror);
   }
 
   public TypeMirror erasure(TypeMirror typeMirror) {
@@ -707,14 +622,8 @@ public class J2CLUtils {
   private boolean isOrOverridesJsFunctionMethod(ExecutableElement methodBinding) {
     Element declaringType = methodBinding.getEnclosingElement();
     if (JsInteropUtils.isJsFunction(declaringType)) {
-
       throw new RuntimeException(" not implemented");
     }
-    /*    for (Symbol.MethodSymbol overriddenMethodBinding : getOverriddenMethods(methodBinding)) {
-      if (isOrOverridesJsFunctionMethod(overriddenMethodBinding)) {
-        return true;
-      }
-    }*/
     return false;
   }
 
@@ -727,41 +636,8 @@ public class J2CLUtils {
       // annotation that customizes the name.
       return originalJsInfo;
     }
-
-    boolean hasExplicitJsMemberAnnotation = hasJsMemberAnnotation(method);
-    JsInfo defaultJsInfo = originalJsInfo;
-    /*
-        for (Symbol.MethodSymbol overriddenMethod : getOverriddenMethods(method)) {
-          JsInfo inheritedJsInfo = JsInteropUtils.getJsInfo(overriddenMethod);
-          if (inheritedJsInfo.getJsMemberType() == JsMemberType.NONE) {
-            continue;
-          }
-
-          if (hasExplicitJsMemberAnnotation
-                  && originalJsInfo.getJsMemberType() != inheritedJsInfo.getJsMemberType()) {
-            // Only inherit from the overridden method if the JsMember types are consistent.
-            continue;
-          }
-
-          if (inheritedJsInfo.getJsName() != null) {
-            // Found an overridden method of the same JsMember type one that customizes the name, done.
-            // If there are any conflicts with other overrides they will be reported by
-            // JsInteropRestrictionsChecker.
-            return JsInfo.Builder.from(inheritedJsInfo).setJsAsync(originalJsInfo.isJsAsync()).build();
-          }
-
-          if (defaultJsInfo == originalJsInfo && !hasExplicitJsMemberAnnotation) {
-            // The original method does not have a JsMember annotation and traversing the list of
-            // overridden methods we found the first that has an explicit JsMember annotation.
-            // Keep it as the one to be used if none is found that customizes the name.
-            // This allows to "inherit" the JsMember type from the override.
-            defaultJsInfo = inheritedJsInfo;
-          }
-        }
-    */
-
     // Don't inherit @JsAsync annotation from overridden methods.
-    return JsInfo.Builder.from(defaultJsInfo).setJsAsync(originalJsInfo.isJsAsync()).build();
+    return JsInfo.Builder.from(originalJsInfo).setJsAsync(originalJsInfo.isJsAsync()).build();
   }
 
   private boolean isSpecialized(
@@ -798,7 +674,7 @@ public class J2CLUtils {
   }
 
   private TypeVariable createTypeVariable(javax.lang.model.type.TypeVariable typeVariable) {
-    if (typeVariable instanceof CapturedType) {
+    if (typeVariable.getKind().equals(TypeKind.WILDCARD)) {
       return createWildcardTypeVariable(typeVariable.getUpperBound());
     }
 
@@ -991,7 +867,7 @@ public class J2CLUtils {
       boolean inNullMarkedScope) {
     checkArgument(!typeMirror.getKind().isPrimitive());
 
-    if (asTypeElement(typeMirror).getQualifiedName().contentEquals("java.lang.Void")) {
+    if (typeMirror.getKind().equals(TypeKind.VOID)) {
       // Void is always nullable.
       return true;
     }

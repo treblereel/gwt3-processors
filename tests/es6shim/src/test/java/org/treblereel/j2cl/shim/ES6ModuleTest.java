@@ -5,7 +5,9 @@ import static org.junit.Assert.assertEquals;
 import com.google.j2cl.junit.apt.J2clTestInput;
 import org.junit.Test;
 
-/** @author Dmitrii Tikhomirov Created by treblereel 1/27/21 */
+/**
+ * @author Dmitrii Tikhomirov Created by treblereel 1/27/21
+ */
 @J2clTestInput(ES6ModuleTest.class)
 public class ES6ModuleTest {
 

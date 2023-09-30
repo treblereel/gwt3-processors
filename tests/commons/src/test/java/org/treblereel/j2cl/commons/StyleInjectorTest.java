@@ -32,7 +32,7 @@ public class StyleInjectorTest {
   public void testStyleInjection() {
     String css = ".myText { font-weight: bold; }";
 
-    StyleInjector.injectStyleSheet(css).injectStyleSheet();
+    StyleInjector.fromString(css).inject();
 
     HTMLDivElement testElement = (HTMLDivElement) DomGlobal.document.createElement("div");
     testElement.id = "testElement";
@@ -52,7 +52,7 @@ public class StyleInjectorTest {
   public void testStyleInjectionAtStart() {
     String css = ".myText { background-color: yellow; }";
 
-    StyleInjector.injectStyleSheet(css).injectStyleSheetAtStart();
+    StyleInjector.fromString(css).injectAtStart();
 
     HTMLDivElement tested = (HTMLDivElement) DomGlobal.document.getElementById("testElement");
     assertEquals("myText", tested.className);

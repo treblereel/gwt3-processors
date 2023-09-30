@@ -23,35 +23,33 @@ import jsinterop.annotations.JsFunction;
 
 public class ScriptInjector {
 
-  public static final Window TOP_WINDOW = DomGlobal.window;
-  public Window window;
-
-  private HTMLScriptElement scriptElement;
+  private final HTMLScriptElement scriptElement;
+  public Window window = DomGlobal.window;
 
   private ScriptInjector(HTMLScriptElement scriptElement) {
     this.scriptElement = scriptElement;
   }
 
   public static ScriptInjector fromString(String contents) {
-    return fromString(contents, null, null);
-  }
-
-  public static ScriptInjector fromString(String contents, Callback onResolve) {
-    return fromString(contents, onResolve, null);
-  }
-
-  public static ScriptInjector fromString(String contents, Callback onResolve, Callback onReject) {
-    HTMLScriptElement element = createElement(onResolve, onReject);
+    HTMLScriptElement element = createElement(null, null);
     element.text = contents;
     return new ScriptInjector(element);
   }
 
-  public static ScriptInjector fromUrl(String url) {
-    return fromUrl(url, null, null);
+  private static HTMLScriptElement createElement(Callback onResolve, Callback onReject) {
+    HTMLScriptElement script = (HTMLScriptElement) DomGlobal.document.createElement("script");
+    if (onResolve != null) {
+      script.addEventListener("load", (e) -> onResolve.accept(script));
+    }
+    if (onReject != null) {
+      script.addEventListener("error", (e) -> onReject.accept(script));
+    }
+    script.type = "text/javascript";
+    return script;
   }
 
-  public static ScriptInjector fromUrl(String url, Callback onResolve) {
-    return fromUrl(url, onResolve, null);
+  public static ScriptInjector fromUrl(String url) {
+    return fromUrl(url, null, null);
   }
 
   public static ScriptInjector fromUrl(String url, Callback onResolve, Callback onReject) {
@@ -60,25 +58,8 @@ public class ScriptInjector {
     return new ScriptInjector(element);
   }
 
-  private static HTMLScriptElement createElement(Callback onResolve, Callback onReject) {
-    HTMLScriptElement script = (HTMLScriptElement) DomGlobal.document.createElement("script");
-    script.addEventListener(
-        "load",
-        (e) -> {
-          if (onResolve != null) {
-            onResolve.accept(script);
-          }
-        });
-
-    script.addEventListener(
-        "error",
-        (e) -> {
-          if (onReject != null) {
-            onReject.accept(script);
-          }
-        });
-    script.type = "text/javascript";
-    return script;
+  public static ScriptInjector fromUrl(String url, Callback onResolve) {
+    return fromUrl(url, onResolve, null);
   }
 
   public ScriptInjector setWindow(Window window) {
