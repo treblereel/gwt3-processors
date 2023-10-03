@@ -5,7 +5,7 @@
 
     <groupId>org.treblereel.j2cl</groupId>
     <artifactId>translation-fr-nr</artifactId>
-    <version>0.6.1</version>
+    <version>0.6.2</version>
     <packaging>jar</packaging>
 
     <name>Translation Tests fr-nr</name>

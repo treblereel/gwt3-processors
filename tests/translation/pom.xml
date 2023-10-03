@@ -5,7 +5,7 @@
 
   <groupId>org.treblereel.j2cl</groupId>
   <artifactId>translation-tests</artifactId>
-  <version>0.6.1</version>
+  <version>0.6.2</version>
   <packaging>pom</packaging>
 
   <name>GWT3 Entry Point Tests</name>

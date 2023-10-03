@@ -5,7 +5,7 @@
 
   <groupId>org.treblereel.j2cl</groupId>
   <artifactId>javaenv-advanced</artifactId>
-  <version>0.6.1</version>
+  <version>0.6.2</version>
   <packaging>jar</packaging>
 
   <name>GWTExports java env Tests ADVANCED mode</name>

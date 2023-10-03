@@ -5,7 +5,7 @@
 
   <groupId>org.treblereel.j2cl</groupId>
   <artifactId>entrypoint-pojo-tests</artifactId>
-  <version>0.6.1</version>
+  <version>0.6.2</version>
 
   <name>GWT3 Entry Point Tests for Pojo class</name>
   <description>Test cases for the GWT3 Entry Point for Pojo class</description>

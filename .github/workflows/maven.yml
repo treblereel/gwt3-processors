@@ -14,7 +14,7 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - name: Setup Chrome
-        uses: browser-actions/setup-chrome@v1.2.3      
+        uses: browser-actions/setup-chrome@v1.2.3
       - name: Checkout
         uses: actions/checkout@v2
       - name: Set up Java 11
