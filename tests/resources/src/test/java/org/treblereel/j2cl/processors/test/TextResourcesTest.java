@@ -19,7 +19,9 @@ package org.treblereel.j2cl.processors.test;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.Test;
 
@@ -56,11 +58,13 @@ public class TextResourcesTest {
   }
 
   private String readFileAsString(String fileName) {
-    String file = this.getClass().getResource(fileName).getPath();
     try {
-      return new String(Files.readAllBytes(Paths.get(file)));
+      Path file = Paths.get(this.getClass().getResource(fileName).toURI());
+      return new String(Files.readAllBytes(file));
     } catch (IOException e) {
-      throw new RuntimeException(e);
+        throw new RuntimeException(e);
+    } catch (URISyntaxException e) {
+        throw new RuntimeException(e);
     }
   }
 }
