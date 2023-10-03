@@ -60,7 +60,7 @@ public class TextResourcesTest {
   private String readFileAsString(String fileName) {
     try {
       Path file = Paths.get(this.getClass().getResource(fileName).toURI());
-      return new String(Files.readAllBytes(file));
+      return Files.readString(file);
     } catch (IOException e) {
         throw new RuntimeException(e);
     } catch (URISyntaxException e) {
