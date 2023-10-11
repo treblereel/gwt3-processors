@@ -23,9 +23,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
 import org.apache.commons.lang3.SystemUtils;
-import org.junit.Assume;
 import org.junit.Test;
 
 public class TextResourcesTest {
@@ -36,17 +34,30 @@ public class TextResourcesTest {
     assertEquals(content, TextTestResourceImpl.INSTANCE.getSmall().getText());
   }
 
+  private String readFileAsString(String fileName) {
+    try {
+      Path file = Paths.get(this.getClass().getResource(fileName).toURI());
+      return Files.readString(file);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    } catch (URISyntaxException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   @Test
   public void testEscape() {
-    if(!SystemUtils.IS_OS_WINDOWS) { //TODO on local windows machine it works, but on github actions it fails
+    if (!SystemUtils
+        .IS_OS_WINDOWS) { // TODO on local windows machine it works, but on github actions it fails
       String content = readFileAsString("escape.txt");
-    assertEquals(content, TextTestResourceImpl.INSTANCE.escape().getText());
+      assertEquals(content, TextTestResourceImpl.INSTANCE.escape().getText());
     }
   }
 
   @Test
   public void testBigTxt() {
-    if(!SystemUtils.IS_OS_WINDOWS) { //TODO on local windows machine it works, but on github actions it fails
+    if (!SystemUtils
+        .IS_OS_WINDOWS) { // TODO on local windows machine it works, but on github actions it fails
       String content = readFileAsString("bigtextresource.txt");
       assertEquals(content, TextTestResourceImpl.INSTANCE.getBig().getText());
     }
@@ -64,14 +75,9 @@ public class TextResourcesTest {
     assertEquals(content, TextTestResourceImpl.INSTANCE.getNoSource().getText());
   }
 
-  private String readFileAsString(String fileName) {
-    try {
-      Path file = Paths.get(this.getClass().getResource(fileName).toURI());
-      return Files.readString(file);
-    } catch (IOException e) {
-        throw new RuntimeException(e);
-    } catch (URISyntaxException e) {
-        throw new RuntimeException(e);
-    }
+  @Test
+  public void testFQDNPath() {
+    String content = readFileAsString("/io/qwerty/test.txt");
+    assertEquals(content, TextTestResourceImpl.INSTANCE.getFQDNPath().getText());
   }
 }

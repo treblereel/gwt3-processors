@@ -134,6 +134,9 @@ public abstract class AbstractResourceGenerator {
     if (method.getAnnotation(ClientBundle.Source.class) != null) {
       ClientBundle.Source source = method.getAnnotation(ClientBundle.Source.class);
       for (int i = 0; i < source.value().length; i++) {
+        if (source.value()[i].startsWith("/")) {
+          return context.resourceOracle.findResource(source.value()[i].substring(1));
+        }
         String fullPath = pkg + "/" + source.value()[i];
         URL url = context.resourceOracle.findResource(fullPath);
         if (url != null) {

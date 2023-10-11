@@ -79,8 +79,7 @@ public class ResourceOracleImpl implements ResourceOracle {
     if (resource != null) {
       return resource;
     }
-    resource = doFindResource(locations, pkg, relativeName);
-    return resource;
+    return doFindResource(locations, pkg, relativeName);
   }
 
   /**

@@ -32,6 +32,9 @@ interface TextTestResource extends ClientBundle {
   @Source("test.js")
   TextResource getFromResourceFolder();
 
+  @Source("/io/qwerty/test.txt")
+  TextResource getFQDNPath();
+
   TextResource escape();
 
   TextResource getNoSource();
