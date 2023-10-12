@@ -19,9 +19,13 @@ package org.treblereel.j2cl.processors.generator.resources;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.PushbackInputStream;
 import java.util.Collections;
+import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import javax.tools.FileObject;
@@ -58,19 +62,26 @@ class MavenArtifactDownloader {
     this.mavenArtifact = mavenArtifact;
   }
 
-  public void copyResourceTo(String path, FileObject dst) {
+  void copyResourceTo(String path, FileObject dst, boolean unzip) {
     if (artifact == null) {
       download();
     }
     try (ZipFile zipFile = new ZipFile(artifact.getFile())) {
       ZipEntry entry = zipFile.getEntry(path);
       if (entry != null) {
+        if (unzip && !checkIfZip(zipFile.getInputStream(entry))) {
+          throw new GenerationException("Resource with a path " + path + " isn't a GZIP");
+        }
         try (BufferedReader reader =
-                new BufferedReader(new InputStreamReader(zipFile.getInputStream(entry)));
+                new BufferedReader(
+                    new InputStreamReader(
+                        unzip
+                            ? new GZIPInputStream(zipFile.getInputStream(entry))
+                            : zipFile.getInputStream(entry)));
             BufferedWriter bufferedWriter =
                 new BufferedWriter(new OutputStreamWriter(dst.openOutputStream()))) {
 
-          char[] buffer = new char[1024]; // a buffer to hold chunks of characters
+          char[] buffer = new char[1024];
           int charsRead;
           while ((charsRead = reader.read(buffer)) != -1) {
             bufferedWriter.write(buffer, 0, charsRead);
@@ -81,6 +92,21 @@ class MavenArtifactDownloader {
         throw new GenerationException("Unable to find resource " + path + " at " + artifact);
       }
     } catch (Exception e) {
+      throw new GenerationException(e);
+    }
+  }
+
+  private boolean checkIfZip(InputStream inputStream) {
+    if (!(inputStream instanceof PushbackInputStream)) {
+      inputStream = new PushbackInputStream(inputStream, 2);
+    }
+
+    byte[] signature = new byte[2];
+    try {
+      int bytesRead = inputStream.read(signature);
+      ((PushbackInputStream) inputStream).unread(signature, 0, bytesRead);
+      return bytesRead == 2 && signature[0] == (byte) 0x1f && signature[1] == (byte) 0x8b;
+    } catch (IOException e) {
       throw new GenerationException(e);
     }
   }

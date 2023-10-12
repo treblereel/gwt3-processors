@@ -17,13 +17,8 @@
 package org.treblereel.j2cl.processors.generator.resources;
 
 import com.google.common.io.Files;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -103,8 +98,7 @@ class MavenArtifactSourceProcessor {
                       StandardLocation.CLASS_OUTPUT,
                       "", // no package
                       copyTo);
-          mavenArtifactSetEntry.getKey().copyResourceTo(path, resource);
-          // copy(is, os);
+          mavenArtifactSetEntry.getKey().copyResourceTo(path, resource, artifactSource.unzip());
         } catch (IOException e) {
           throw new RuntimeException(e);
         }
@@ -120,7 +114,7 @@ class MavenArtifactSourceProcessor {
 
     if (!pattern.matcher(pkg).matches()) {
       throw new GenerationException(
-          "Wring " + type + " at " + method.getEnclosingElement() + "." + method.getSimpleName());
+          "Wrong " + type + " at " + method.getEnclosingElement() + "." + method.getSimpleName());
     }
   }
 
@@ -143,20 +137,6 @@ class MavenArtifactSourceProcessor {
         stack.pop();
         file.delete();
       }
-    }
-  }
-
-  public void copy(InputStreamReader reader, OutputStream outStream) throws IOException {
-    try (BufferedReader bufferedReader = new BufferedReader(reader);
-        BufferedWriter bufferedWriter =
-            new BufferedWriter(new OutputStreamWriter(outStream, reader.getEncoding()))) {
-
-      char[] buffer = new char[1024]; // a buffer to hold chunks of characters
-      int charsRead;
-      while ((charsRead = bufferedReader.read(buffer)) != -1) {
-        bufferedWriter.write(buffer, 0, charsRead);
-      }
-      bufferedWriter.flush();
     }
   }
 }

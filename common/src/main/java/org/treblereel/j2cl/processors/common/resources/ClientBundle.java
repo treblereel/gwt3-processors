@@ -60,5 +60,7 @@ public interface ClientBundle {
     String path();
 
     String copyTo() default "<auto>";
+
+    boolean unzip() default false;
   }
 }

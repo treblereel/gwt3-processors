@@ -77,4 +77,13 @@ interface TextTestResource extends ClientBundle {
       path = "META-INF/resources/webjars/jquery/3.7.1/src/css/support.js",
       copyTo = "org/test/support-old.js.back")
   TextResource externalResourceWebJarRenameDashInFile();
+
+  @MavenArtifactSource(
+      group = "org.webjars",
+      artifact = "bootstrap",
+      version = "3.4.1",
+      path = "META-INF/resources/webjars/bootstrap/3.4.1/js/bootstrap.min.js.gz",
+      copyTo = "org/test/bootstrap.min.js.back",
+      unzip = true)
+  TextResource externalResourceWebJarGZIP();
 }

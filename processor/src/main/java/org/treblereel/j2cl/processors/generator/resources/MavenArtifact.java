@@ -86,8 +86,8 @@ class MavenArtifact {
     return repositoryUrl;
   }
 
-  void copyResourceTo(String path, FileObject dst) {
-    mavenArtifactDownloader.copyResourceTo(path, dst);
+  void copyResourceTo(String path, FileObject dst, boolean unzip) {
+    mavenArtifactDownloader.copyResourceTo(path, dst, unzip);
   }
 
   @Override

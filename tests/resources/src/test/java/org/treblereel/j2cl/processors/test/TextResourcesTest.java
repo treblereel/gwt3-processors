@@ -104,4 +104,10 @@ public class TextResourcesTest {
     String content = readFileAsString("original_support.js");
     assertEquals(content, TextTestResourceImpl.INSTANCE.externalResourceWebJarRename().getText());
   }
+
+  @Test
+  public void testExternalResourceWebJarGZIP() {
+    String content = readFileAsString("bootstrap.min.js.back");
+    assertEquals(content, TextTestResourceImpl.INSTANCE.externalResourceWebJarGZIP().getText());
+  }
 }
