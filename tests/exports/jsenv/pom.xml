@@ -5,7 +5,7 @@
 
   <groupId>org.treblereel.j2cl</groupId>
   <artifactId>jsenv</artifactId>
-  <version>0.6.2</version>
+  <version>0.6.3</version>
   <packaging>jar</packaging>
 
   <name>GWTExports Tests ADVANCED mode</name>

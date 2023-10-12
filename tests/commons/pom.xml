@@ -5,7 +5,7 @@
 
     <groupId>org.treblereel.j2cl</groupId>
     <artifactId>common-tests</artifactId>
-    <version>0.6.2</version>
+    <version>0.6.3</version>
 
     <name>Common test cases</name>
     <description>Common test cases</description>
@@ -85,7 +85,7 @@
         <dependency>
             <groupId>org.treblereel.j2cl.processors</groupId>
             <artifactId>common</artifactId>
-            <version>0.6.2</version>
+            <version>0.6.3</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
