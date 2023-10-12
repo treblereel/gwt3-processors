@@ -16,14 +16,12 @@
 
 package org.treblereel.j2cl.processors.test;
 
-import static org.junit.Assert.assertEquals;
-
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import org.apache.commons.lang3.SystemUtils;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class TextResourcesTest {
@@ -47,20 +45,14 @@ public class TextResourcesTest {
 
   @Test
   public void testEscape() {
-    if (!SystemUtils
-        .IS_OS_WINDOWS) { // TODO on local windows machine it works, but on github actions it fails
       String content = readFileAsString("escape.txt");
       assertEquals(content, TextTestResourceImpl.INSTANCE.escape().getText());
-    }
   }
 
   @Test
   public void testBigTxt() {
-    if (!SystemUtils
-        .IS_OS_WINDOWS) { // TODO on local windows machine it works, but on github actions it fails
       String content = readFileAsString("bigtextresource.txt");
       assertEquals(content, TextTestResourceImpl.INSTANCE.getBig().getText());
-    }
   }
 
   @Test
@@ -109,5 +101,13 @@ public class TextResourcesTest {
   public void testExternalResourceWebJarGZIP() {
     String content = readFileAsString("bootstrap.min.js.back");
     assertEquals(content, TextTestResourceImpl.INSTANCE.externalResourceWebJarGZIP().getText());
+  }
+
+  private void assertEquals(String str1, String str2) {
+    Assert.assertEquals(normalize(str1), normalize(str2));
+  }
+
+  private String normalize(String s) {
+    return s.replace("\r\n","\n");
   }
 }
