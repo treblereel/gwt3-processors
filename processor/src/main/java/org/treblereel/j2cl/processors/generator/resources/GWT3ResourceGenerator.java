@@ -28,9 +28,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.annotation.processing.FilerException;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
@@ -89,7 +91,21 @@ public class GWT3ResourceGenerator extends AbstractGenerator {
 
   @Override
   public void generate(Set<Element> elements) {
+    checkIfMavenArtifcatsAsSourcePresented();
     elements.stream().map(this::validate).forEach(this::generate);
+  }
+
+  private void checkIfMavenArtifcatsAsSourcePresented() {
+    Set<ExecutableElement> withMavenArtifact =
+        (Set<ExecutableElement>)
+            context
+                .getRoundEnv()
+                .getElementsAnnotatedWith(ClientBundle.MavenArtifactSource.class)
+                .stream()
+                .collect(Collectors.toSet());
+    if (!withMavenArtifact.isEmpty()) {
+      new MavenArtifactSourceProcessor(context).process(withMavenArtifact);
+    }
   }
 
   private void generate(TypeElement clientBundle) {

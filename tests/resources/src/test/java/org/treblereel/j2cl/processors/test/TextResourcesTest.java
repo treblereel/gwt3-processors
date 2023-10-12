@@ -80,4 +80,28 @@ public class TextResourcesTest {
     String content = readFileAsString("/io/qwerty/test.txt");
     assertEquals(content, TextTestResourceImpl.INSTANCE.getFQDNPath().getText());
   }
+
+  @Test
+  public void testExternalResource() {
+    String content = readFileAsString("patternfly.css");
+    assertEquals(content, TextTestResourceImpl.INSTANCE.externalResource().getText());
+  }
+
+  @Test
+  public void testExternalResourceRename() {
+    String content = readFileAsString("patternfly.css");
+    assertEquals(content, TextTestResourceImpl.INSTANCE.externalResourceRename().getText());
+  }
+
+  @Test
+  public void testExternalResourceWebJar() {
+    String content = readFileAsString("original_support.js");
+    assertEquals(content, TextTestResourceImpl.INSTANCE.externalResourceWebJar().getText());
+  }
+
+  @Test
+  public void testExternalResourceWebJarRename() {
+    String content = readFileAsString("original_support.js");
+    assertEquals(content, TextTestResourceImpl.INSTANCE.externalResourceWebJarRename().getText());
+  }
 }

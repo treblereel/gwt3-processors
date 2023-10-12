@@ -40,4 +40,25 @@ public interface ClientBundle {
   @interface Source {
     String[] value();
   }
+
+  @Documented
+  @Retention(RetentionPolicy.RUNTIME)
+  @Target(ElementType.METHOD)
+  @interface MavenArtifactSource {
+    String repositoryId() default "central";
+
+    String repositoryType() default "default";
+
+    String repositoryUrl() default "https://repo1.maven.org/maven2/";
+
+    String group();
+
+    String artifact();
+
+    String version();
+
+    String path();
+
+    String copyTo() default "<auto>";
+  }
 }

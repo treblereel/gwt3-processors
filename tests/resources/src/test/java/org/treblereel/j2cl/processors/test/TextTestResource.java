@@ -38,4 +38,43 @@ interface TextTestResource extends ClientBundle {
   TextResource escape();
 
   TextResource getNoSource();
+
+  @MavenArtifactSource(
+      group = "org.uberfire",
+      artifact = "uberfire-workbench-client-views-patternfly",
+      version = "7.74.1.Final",
+      path = "org/uberfire/client/views/static/css/patternfly.css")
+  TextResource externalResource();
+
+  @MavenArtifactSource(
+      group = "org.uberfire",
+      artifact = "uberfire-workbench-client-views-patternfly",
+      version = "7.74.1.Final",
+      path = "org/uberfire/client/views/static/css/patternfly.css",
+      copyTo = "org/qwerty/css/test.css")
+  TextResource externalResourceRename();
+
+  @MavenArtifactSource(
+      group = "org.webjars.npm",
+      artifact = "jquery",
+      version = "3.7.1",
+      path = "META-INF/resources/webjars/jquery/3.7.1/src/css/support.js",
+      copyTo = "resources/webjars/jquery/src/css/support.js")
+  TextResource externalResourceWebJar();
+
+  @MavenArtifactSource(
+      group = "org.webjars.npm",
+      artifact = "jquery",
+      version = "3.7.1",
+      path = "META-INF/resources/webjars/jquery/3.7.1/src/css/support.js",
+      copyTo = "org/test/support.js.back")
+  TextResource externalResourceWebJarRename();
+
+  @MavenArtifactSource(
+      group = "org.webjars.npm",
+      artifact = "jquery",
+      version = "3.7.1",
+      path = "META-INF/resources/webjars/jquery/3.7.1/src/css/support.js",
+      copyTo = "org/test/support-old.js.back")
+  TextResource externalResourceWebJarRenameDashInFile();
 }

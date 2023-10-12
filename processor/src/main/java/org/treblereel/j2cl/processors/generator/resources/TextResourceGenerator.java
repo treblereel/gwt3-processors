@@ -65,6 +65,13 @@ class TextResourceGenerator extends AbstractResourceGenerator {
 
   private String lookupResource(ExecutableElement method) {
     URL resource = getResource(method, defaultExtensions.value());
+    if (resource == null) {
+      throw new GenerationException(
+          "Unable to find resource for: "
+              + method.getEnclosingElement()
+              + "."
+              + method.getSimpleName());
+    }
     return readURLAsString(resource, method);
   }
 }
