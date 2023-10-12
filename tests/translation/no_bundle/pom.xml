@@ -5,8 +5,8 @@
 
     <parent>
         <groupId>org.treblereel.j2cl</groupId>
-        <artifactId>tests-parent</artifactId>
-        <version>0.6.1</version>
+        <artifactId>translation-tests</artifactId>
+        <version>0.6.3</version>
     </parent>
 
     <artifactId>translation-no_bundle</artifactId>

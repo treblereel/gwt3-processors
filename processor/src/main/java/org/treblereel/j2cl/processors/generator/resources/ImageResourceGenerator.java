@@ -24,6 +24,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -56,8 +57,8 @@ class ImageResourceGenerator extends AbstractResourceGenerator {
     definition.put("name", method.getSimpleName().toString());
 
     URL resource = getResource(method, defaultExtensions.value());
-    Path imagePath = Paths.get(resource.getPath());
     try {
+      Path imagePath = Paths.get(resource.toURI());
       String mimeType = String.format("data:%s;base64,", Files.probeContentType(imagePath));
       setSize(method, imagePath, definition);
 
@@ -76,7 +77,9 @@ class ImageResourceGenerator extends AbstractResourceGenerator {
         throw new GenerationException(e);
       }
     } catch (IOException e) {
-      throw new GenerationException("Unable to determine mime type for " + imagePath, e);
+      throw new GenerationException("Unable to determine mime type for " + resource, e);
+    } catch (URISyntaxException e) {
+      throw new GenerationException("Unable to determine mime type for " + resource, e);
     }
   }
 

@@ -134,12 +134,23 @@ public abstract class AbstractResourceGenerator {
     if (method.getAnnotation(ClientBundle.Source.class) != null) {
       ClientBundle.Source source = method.getAnnotation(ClientBundle.Source.class);
       for (int i = 0; i < source.value().length; i++) {
+        if (source.value()[i].startsWith("/")) {
+          return context.resourceOracle.findResource(source.value()[i].substring(1));
+        }
         String fullPath = pkg + "/" + source.value()[i];
         URL url = context.resourceOracle.findResource(fullPath);
         if (url != null) {
           return url;
         }
       }
+    } else if (method.getAnnotation(ClientBundle.MavenArtifactSource.class) != null) {
+      ClientBundle.MavenArtifactSource artifactSource =
+          method.getAnnotation(ClientBundle.MavenArtifactSource.class);
+      String path =
+          !artifactSource.copyTo().equals("<auto>")
+              ? artifactSource.copyTo()
+              : artifactSource.path();
+      return context.resourceOracle.findResource(path);
     } else if (extensions != null) {
       for (int i = 0; i < defaultExtensions.value().length; i++) {
         String extension = defaultExtensions.value()[i];
