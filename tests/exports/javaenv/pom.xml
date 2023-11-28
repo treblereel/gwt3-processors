@@ -5,7 +5,7 @@
 
   <groupId>org.treblereel.j2cl</groupId>
   <artifactId>javaenv</artifactId>
-  <version>0.6.3</version>
+  <version>0.6.4</version>
   <packaging>jar</packaging>
 
   <name>GWTExports java env Tests BUNDLE_JAR mode</name>

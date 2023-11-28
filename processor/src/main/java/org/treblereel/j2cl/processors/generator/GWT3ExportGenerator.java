@@ -29,7 +29,9 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.lang.model.element.Element;
@@ -112,13 +114,13 @@ public class GWT3ExportGenerator extends AbstractGenerator {
         exports.put(checkClazz(parent), new HashSet<>());
         exports.get(parent).addAll(methods);
 
-        ElementFilter.methodsIn(parent.getEnclosedElements()).stream()
+        getAllMethodsIn(parent).stream()
             .filter(elm -> !elm.getModifiers().contains(Modifier.PRIVATE))
             .filter(elm -> !elm.getModifiers().contains(Modifier.NATIVE))
             .filter(elm -> !elm.getModifiers().contains(Modifier.ABSTRACT))
             .forEach(elm -> exportDTOs.get(parent).addMethod(getMethodDTO(parent, elm)));
 
-        ElementFilter.fieldsIn(parent.getEnclosedElements()).stream()
+        getAllFieldsIn(parent).stream()
             .filter(elm -> !elm.getModifiers().contains(Modifier.PRIVATE))
             .filter(elm -> !elm.getModifiers().contains(Modifier.NATIVE))
             .filter(elm -> !elm.getModifiers().contains(Modifier.ABSTRACT))
@@ -287,9 +289,8 @@ public class GWT3ExportGenerator extends AbstractGenerator {
               + ", mustn't be annotated with @ES6Module");
     }
     Set<ExecutableElement> constructors =
-        ElementFilter.constructorsIn(parent.getEnclosedElements()).stream()
-            .collect(Collectors.toSet());
-    if (!constructors.isEmpty()) {
+        new HashSet<>(ElementFilter.constructorsIn(parent.getEnclosedElements()));
+    if (parent.getAnnotation(JsType.class) == null && !constructors.isEmpty()) {
       constructors.stream()
           .filter(elm -> elm.getModifiers().contains(Modifier.PUBLIC))
           .filter(elm -> elm.getParameters().isEmpty())
@@ -304,5 +305,35 @@ public class GWT3ExportGenerator extends AbstractGenerator {
     }
 
     return parent;
+  }
+
+  private Set<ExecutableElement> getAllMethodsIn(TypeElement parent) {
+    Set<ExecutableElement> elements = new HashSet<>();
+    Queue<TypeElement> queue = new LinkedList<>();
+    queue.add(parent);
+    while (!queue.isEmpty()) {
+      TypeElement current = queue.poll();
+      elements.addAll(ElementFilter.methodsIn(current.getEnclosedElements()));
+      if (!current.getSuperclass().toString().equals("java.lang.Object")
+          && MoreTypes.asElement(current.getSuperclass()).getKind().isClass()) {
+        queue.offer((TypeElement) MoreTypes.asElement(current.getSuperclass()));
+      }
+    }
+    return elements;
+  }
+
+  private Set<VariableElement> getAllFieldsIn(TypeElement parent) {
+    Set<VariableElement> elements = new HashSet<>();
+    Queue<TypeElement> queue = new LinkedList<>();
+    queue.add(parent);
+    while (!queue.isEmpty()) {
+      TypeElement current = queue.poll();
+      elements.addAll(ElementFilter.fieldsIn(current.getEnclosedElements()));
+      if (!current.getSuperclass().toString().equals("java.lang.Object")
+          && MoreTypes.asElement(current.getSuperclass()).getKind().isClass()) {
+        queue.offer((TypeElement) MoreTypes.asElement(current.getSuperclass()));
+      }
+    }
+    return elements;
   }
 }

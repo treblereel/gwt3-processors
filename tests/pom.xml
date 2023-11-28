@@ -5,7 +5,7 @@
 
   <groupId>org.treblereel.j2cl</groupId>
   <artifactId>tests-parent</artifactId>
-  <version>0.6.3</version>
+  <version>0.6.4</version>
   <packaging>pom</packaging>
 
   <name>GWT3 processors Tests</name>
