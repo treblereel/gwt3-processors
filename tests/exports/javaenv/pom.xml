@@ -26,9 +26,9 @@
     <maven.surefire.plugin>3.1.0</maven.surefire.plugin>
     <maven.source.plugin>3.0.1</maven.source.plugin>
     <maven.license.plugin>3.0</maven.license.plugin>
-    <maven.j2cl.plugin>0.21.0</maven.j2cl.plugin>
+    <maven.j2cl.plugin>0.23-SNAPSHOT</maven.j2cl.plugin>
 
-    <maven.j2cl.version>0.11.0-9336533b6</maven.j2cl.version>
+    <maven.j2cl.version>v20230718-1</maven.j2cl.version>
     <selenium.chrome.driver.version>4.12.1</selenium.chrome.driver.version>
     <junit.version>4.13.1</junit.version>
 

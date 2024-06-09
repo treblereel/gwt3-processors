@@ -59,7 +59,7 @@
 
     <com.google.elemental2.version>1.1.0</com.google.elemental2.version>
     <com.google.jsinterop.annotations.version>2.0.0</com.google.jsinterop.annotations.version>
-    <j2cl.version>0.11.0-9336533b6</j2cl.version>
+    <j2cl.version>v20230718-1</j2cl.version>
     <auto.common.version>0.11</auto.common.version>
     <auto.service.version>1.0-rc7</auto.service.version>
     <classgraph.version>4.8.141</classgraph.version>
