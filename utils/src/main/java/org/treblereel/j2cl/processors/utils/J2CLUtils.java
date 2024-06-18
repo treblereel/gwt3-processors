@@ -596,7 +596,7 @@ public class J2CLUtils {
     return createFieldDescriptor(variableElement, variableElement.asType());
   }
 
-  FieldDescriptor createFieldDescriptor(VariableElement variableElement, TypeMirror type) {
+  public FieldDescriptor createFieldDescriptor(VariableElement variableElement, TypeMirror type) {
 
     boolean isStatic = isStatic(variableElement);
     Visibility visibility = getVisibility(variableElement);
