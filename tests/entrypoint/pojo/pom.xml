@@ -5,7 +5,7 @@
 
   <groupId>org.treblereel.j2cl</groupId>
   <artifactId>entrypoint-pojo-tests</artifactId>
-  <version>0.6.4</version>
+  <version>0.7.0-SNAPSHOT</version>
 
   <name>GWT3 Entry Point Tests for Pojo class</name>
   <description>Test cases for the GWT3 Entry Point for Pojo class</description>
@@ -31,7 +31,7 @@
     <junit.version>4.13.1</junit.version>
     <jsinterop.annotations.version>2.0.0</jsinterop.annotations.version>
     <jsinterop.base.version>1.0.0</jsinterop.base.version>
-    <elemental2.version>1.1.0</elemental2.version>
+    <elemental2.version>1.2.1</elemental2.version>
   </properties>
 
   <dependencies>

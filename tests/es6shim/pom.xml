@@ -5,7 +5,7 @@
 
   <artifactId>es6shim-tests</artifactId>
   <groupId>org.treblereel.j2cl</groupId>
-  <version>0.6.4</version>
+  <version>0.7.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>ES6SHIM Tests</name>
@@ -31,7 +31,7 @@
 
     <jsinterop.annotations.version>2.0.0</jsinterop.annotations.version>
     <jsinterop.base.version>1.0.0</jsinterop.base.version>
-    <elemental2.version>1.1.0</elemental2.version>
+    <elemental2.version>1.2.1</elemental2.version>
   </properties>
 
   <dependencies>
