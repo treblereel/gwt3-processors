@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.treblereel.j2cl</groupId>
         <artifactId>translation-tests</artifactId>
-        <version>0.7.0-SNAPSHOT</version>
+        <version>0.7</version>
     </parent>
 
     <artifactId>translation-no_bundle</artifactId>

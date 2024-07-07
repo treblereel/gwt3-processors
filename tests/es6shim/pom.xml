@@ -5,7 +5,7 @@
 
   <artifactId>es6shim-tests</artifactId>
   <groupId>org.treblereel.j2cl</groupId>
-  <version>0.7.0-SNAPSHOT</version>
+  <version>0.7</version>
   <packaging>jar</packaging>
 
   <name>ES6SHIM Tests</name>
