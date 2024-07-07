@@ -43,12 +43,12 @@
             <version>${auto.common.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.vertispan.j2cl</groupId>
+            <groupId>org.kie.j2cl.tools</groupId>
             <artifactId>frontend-common</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>com.vertispan.j2cl</groupId>
+            <groupId>org.kie.j2cl.tools</groupId>
             <artifactId>frontend-javac</artifactId>
         </dependency>
     </dependencies>
