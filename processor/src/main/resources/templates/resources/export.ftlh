@@ -1,25 +1,33 @@
+<#if !isNative>
+/**
+* @fileoverview
+* @suppress {missingProperties}
+*/
+</#if>
 goog.module('${module}$GWT3Export');
 
 const EXPORT = goog.require('${target}');
 
 <#if isNative>
 goog.exportSymbol('${type}', EXPORT);
-<#else>
-const j_l_Object = goog.require('java.lang.Object$impl');
-const $Util = goog.require('nativebootstrap.Util$impl');
-
-class _EXPORT extends EXPORT {
-    constructor() {
-        EXPORT.$clinit();
-        super();
-        this.${ctor}();
-    }
-}
-
-$Util.$setClassMetadata(_EXPORT, '${module}');
-goog.exportSymbol('${type}', _EXPORT);
-</#if>
 
 <#list methods as method>
 goog.exportSymbol('${type}.<#if !method.isStatic>prototype.</#if>${method.name}', EXPORT.<#if !method.isStatic>prototype.</#if>${method.mangleName});
 </#list>
+<#else>
+const classProxy = new Proxy(EXPORT, {
+    construct(target, args) {
+        return EXPORT.$create__();
+    }
+});
+
+EXPORT.$clinit();
+goog.exportSymbol('${type}', classProxy);
+<#list methods as method>
+<#if method.isStatic>
+goog.exportProperty(EXPORT, '${method.name}', EXPORT.${method.mangleName});
+<#else>
+goog.exportSymbol('${type}.prototype.${method.name}', classProxy.prototype.${method.mangleName});
+</#if>
+</#list>
+</#if>

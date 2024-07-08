@@ -5,7 +5,7 @@
 
   <groupId>org.treblereel.j2cl</groupId>
   <artifactId>javaenv-advanced</artifactId>
-  <version>0.6.3</version>
+  <version>0.7</version>
   <packaging>jar</packaging>
 
   <name>GWTExports java env Tests ADVANCED mode</name>
@@ -26,9 +26,9 @@
     <maven.surefire.plugin>3.1.0</maven.surefire.plugin>
     <maven.source.plugin>3.0.1</maven.source.plugin>
     <maven.license.plugin>3.0</maven.license.plugin>
-    <maven.j2cl.plugin>0.21.0</maven.j2cl.plugin>
+    <maven.j2cl.plugin>0.23.1</maven.j2cl.plugin>
 
-    <maven.j2cl.version>0.11.0-9336533b6</maven.j2cl.version>
+    <maven.j2cl.version>v20240622-2</maven.j2cl.version>
     <selenium.chrome.driver.version>4.12.1</selenium.chrome.driver.version>
     <junit.version>4.13.1</junit.version>
 
@@ -75,20 +75,20 @@
     </dependency>
     <!-- test dependencies -->
     <dependency>
-      <groupId>com.vertispan.j2cl</groupId>
+      <groupId>org.kie.j2cl.tools</groupId>
       <artifactId>junit-annotations</artifactId>
       <version>${maven.j2cl.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>com.vertispan.j2cl</groupId>
+      <groupId>org.kie.j2cl.tools</groupId>
       <artifactId>gwttestcase-emul</artifactId>
       <version>${maven.j2cl.version}</version>
       <classifier>sources</classifier>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>com.vertispan.j2cl</groupId>
+      <groupId>org.kie.j2cl.tools</groupId>
       <artifactId>junit-emul</artifactId>
       <version>${maven.j2cl.version}</version>
       <scope>test</scope>
@@ -120,7 +120,7 @@
         </configuration>
       </plugin>
       <plugin>
-        <groupId>com.vertispan.j2cl</groupId>
+        <groupId>org.kie.j2cl.tools</groupId>
         <artifactId>j2cl-maven-plugin</artifactId>
         <version>${maven.j2cl.plugin}</version>
         <executions>

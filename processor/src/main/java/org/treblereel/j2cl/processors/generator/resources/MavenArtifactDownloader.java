@@ -29,25 +29,19 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import javax.tools.FileObject;
-import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.AbstractRepositoryListener;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
-import org.eclipse.aether.impl.DefaultServiceLocator;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactRequest;
 import org.eclipse.aether.resolution.ArtifactResolutionException;
 import org.eclipse.aether.resolution.ArtifactResult;
-import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
-import org.eclipse.aether.spi.connector.transport.TransporterFactory;
+import org.eclipse.aether.supplier.RepositorySystemSupplier;
 import org.eclipse.aether.transfer.AbstractTransferListener;
-import org.eclipse.aether.transport.file.FileTransporterFactory;
-import org.eclipse.aether.transport.http.HttpTransporterFactory;
 import org.treblereel.j2cl.processors.exception.GenerationException;
 
 class MavenArtifactDownloader {
@@ -137,19 +131,18 @@ class MavenArtifactDownloader {
       this.artifact = artifactResult.getArtifact();
     } catch (ArtifactResolutionException e) {
       throw new GenerationException(e);
+    } finally {
+      system.shutdown();
     }
   }
 
   private RepositorySystem newRepositorySystem() {
-    DefaultServiceLocator locator = MavenRepositorySystemUtils.newServiceLocator();
-    locator.addService(RepositoryConnectorFactory.class, BasicRepositoryConnectorFactory.class);
-    locator.addService(TransporterFactory.class, FileTransporterFactory.class);
-    locator.addService(TransporterFactory.class, HttpTransporterFactory.class);
-    return locator.getService(RepositorySystem.class);
+    RepositorySystemSupplier supplier = new RepositorySystemSupplier();
+    return supplier.get();
   }
 
   private RepositorySystemSession newSession(RepositorySystem system) {
-    DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
+    DefaultRepositorySystemSession session = new DefaultRepositorySystemSession();
     LocalRepository localRepo = new LocalRepository(tempDir);
     session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, localRepo));
     session.setTransferListener(new ConsoleTransferListener());

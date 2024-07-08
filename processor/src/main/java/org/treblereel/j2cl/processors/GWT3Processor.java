@@ -33,7 +33,7 @@ import org.treblereel.j2cl.processors.generator.TranslationGenerator;
 import org.treblereel.j2cl.processors.generator.resources.GWT3ResourceGenerator;
 
 @AutoService(Processor.class)
-@SupportedSourceVersion(SourceVersion.RELEASE_8)
+@SupportedSourceVersion(SourceVersion.RELEASE_11)
 @SupportedAnnotationTypes({
   "org.treblereel.j2cl.processors.annotations.GWT3EntryPoint",
   "org.treblereel.j2cl.processors.annotations.ES6Module",
