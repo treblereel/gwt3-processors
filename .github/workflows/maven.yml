@@ -14,7 +14,7 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - name: Setup Chrome
-        uses: browser-actions/setup-chrome@v1.7.1
+        uses: browser-actions/setup-chrome@v1.7.2
       - name: Checkout
         uses: actions/checkout@v2
       - name: Set up Java 11
@@ -26,7 +26,7 @@ jobs:
         run: |
           mvn -B package --file pom.xml
       - name: Upload test results for review
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: test-results-${{ matrix.os }}
@@ -55,7 +55,7 @@ jobs:
         run: |
           mvn -B package --file pom.xml
       - name: Upload test results for review
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: test-results-mvn-v${{ matrix.mvn }}-jvm${{ matrix.java }}
