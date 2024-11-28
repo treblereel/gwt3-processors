@@ -5,7 +5,7 @@
 
   <groupId>org.treblereel.j2cl</groupId>
   <artifactId>tests-parent</artifactId>
-  <version>0.7</version>
+  <version>0.8</version>
   <packaging>pom</packaging>
 
   <name>GWT3 processors Tests</name>
@@ -19,17 +19,16 @@
     <maven.compiler.source>11</maven.compiler.source>
     <maven.compiler.target>11</maven.compiler.target>
 
-    <maven.j2cl.plugin>0.23.1</maven.j2cl.plugin>
+    <maven.j2cl.plugin>0.23.2</maven.j2cl.plugin>
     <maven.surefire.plugin.version>2.17</maven.surefire.plugin.version>
     <maven.deploy.plugin.version>2.8.2</maven.deploy.plugin.version>
     <maven.compiler.plugin.version>3.8.0</maven.compiler.plugin.version>
 
     <jsinterop.annotations.version>2.0.0</jsinterop.annotations.version>
-    <jsinterop.base.version>1.0.0</jsinterop.base.version>
-    <elemental2.version>1.2.1</elemental2.version>
+    <elemental2.version>1.2.3</elemental2.version>
     <!-- CI -->
-    <j2cl.version>v20240622-2</j2cl.version>
-    <junit.version>4.11</junit.version>
+    <j2cl.version>v20241110-1</j2cl.version>
+    <junit.version>4.13.2</junit.version>
     <selenium.chrome.driver.version>4.12.1</selenium.chrome.driver.version>
 
   </properties>
@@ -57,22 +56,10 @@
       </dependency>
 
       <dependency>
-        <groupId>com.google.jsinterop</groupId>
-        <artifactId>jsinterop-annotations</artifactId>
-        <version>${jsinterop.annotations.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.jsinterop</groupId>
-        <artifactId>base</artifactId>
-        <version>${jsinterop.base.version}</version>
-      </dependency>
-
-      <dependency>
         <groupId>com.google.elemental2</groupId>
         <artifactId>elemental2-dom</artifactId>
         <version>${elemental2.version}</version>
       </dependency>
-
 
       <!-- test dependencies -->
       <dependency>

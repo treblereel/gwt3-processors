@@ -5,7 +5,7 @@
     <parent>
         <artifactId>parent</artifactId>
         <groupId>org.treblereel.j2cl.processors</groupId>
-        <version>0.7</version>
+        <version>0.8</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -50,6 +50,10 @@
         <dependency>
             <groupId>org.kie.j2cl.tools</groupId>
             <artifactId>frontend-javac</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm</artifactId>
         </dependency>
     </dependencies>
 

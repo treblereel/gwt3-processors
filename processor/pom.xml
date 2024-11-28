@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.treblereel.j2cl.processors</groupId>
         <artifactId>parent</artifactId>
-        <version>0.7</version>
+        <version>0.8</version>
     </parent>
 
     <artifactId>processors</artifactId>
@@ -110,6 +110,18 @@
             </resource>
         </resources>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.0</version>
+                <configuration>
+                    <fork>true</fork>
+                    <compilerArgs>
+                        <arg>--add-exports</arg>
+                        <arg>jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED</arg>
+                    </compilerArgs>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>

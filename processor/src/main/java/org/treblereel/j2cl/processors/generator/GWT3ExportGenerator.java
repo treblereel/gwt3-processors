@@ -18,7 +18,6 @@ package org.treblereel.j2cl.processors.generator;
 
 import com.google.auto.common.MoreElements;
 import com.google.auto.common.MoreTypes;
-import com.google.j2cl.transpiler.ast.DeclaredTypeDescriptor;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
@@ -40,7 +39,6 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import jsinterop.annotations.JsType;
@@ -164,18 +162,14 @@ public class GWT3ExportGenerator extends AbstractGenerator {
   private MethodDTO getMethodDTO(TypeElement parent, Element m) {
     ExecutableElement method = checkMethod(m);
     String methodName = getSimpleName(method);
-    DeclaredType declaredType = MoreTypes.asDeclared(parent.asType());
-    DeclaredTypeDescriptor enclosingTypeDescriptor =
-        utils.createDeclaredTypeDescriptor(declaredType);
-    String mangleName =
-        utils.createDeclarationMethodDescriptor(method, enclosingTypeDescriptor).getMangledName();
+    String mangleName = utils.getMethodMangledName(method);
     return new MethodDTO(methodName, mangleName, m.getModifiers().contains(Modifier.STATIC));
   }
 
   private PropertyDTO getPropertyDTO(Element method) {
     VariableElement variableElement = checkProperty(method);
     String name = getSimpleName(variableElement);
-    String mangleName = utils.createFieldDescriptor(variableElement).getMangledName();
+    String mangleName = utils.getVariableMangledName(variableElement);
 
     return new PropertyDTO(name, mangleName);
   }
