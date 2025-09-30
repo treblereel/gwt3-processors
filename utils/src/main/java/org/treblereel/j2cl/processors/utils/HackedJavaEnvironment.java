@@ -19,7 +19,6 @@ package org.treblereel.j2cl.processors.utils;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.j2cl.transpiler.ast.TypeDeclaration.newBuilder;
-import static com.google.j2cl.transpiler.frontend.common.FrontendConstants.WASM_ANNOTATION_NAME;
 
 import com.google.auto.common.MoreTypes;
 import com.google.common.collect.ImmutableList;
@@ -27,7 +26,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Streams;
 import com.google.j2cl.common.InternalCompilerError;
 import com.google.j2cl.transpiler.ast.*;
-import com.google.j2cl.transpiler.frontend.javac.AnnotationUtils;
 import com.google.j2cl.transpiler.frontend.javac.JsInteropAnnotationUtils;
 import com.google.j2cl.transpiler.frontend.javac.JsInteropUtils;
 import java.util.*;
@@ -617,9 +615,6 @@ class HackedJavaEnvironment {
             constantValue != null ? Literal.fromValue(constantValue, thisTypeDescriptor) : null)
         .setDeclarationDescriptor(declarationFieldDescriptor)
         .setEnumConstant(isEnumConstant)
-        .setUnusableByJsSuppressed(
-            JsInteropAnnotationUtils.isUnusableByJsSuppressed(variableElement))
-        .setDeprecated(isDeprecated(variableElement))
         .build();
   }
 
@@ -739,11 +734,9 @@ class HackedJavaEnvironment {
               .setTypeDescriptor(parameters.get(i))
               .setJsOptional(JsInteropUtils.isJsOptional(declarationMethodElement, i))
               .setVarargs(i == parameters.size() - 1 && declarationMethodElement.isVarArgs())
-              .setDoNotAutobox(JsInteropUtils.isDoNotAutobox(declarationMethodElement, i))
               .build());
     }
 
-    boolean hasUncheckedCast = hasUncheckedCastAnnotation(declarationMethodElement);
     return MethodDescriptor.newBuilder()
         .setEnclosingTypeDescriptor(enclosingTypeDescriptor)
         .setName(isConstructor ? null : methodName)
@@ -756,17 +749,11 @@ class HackedJavaEnvironment {
         .setStatic(isStatic)
         .setConstructor(isConstructor)
         .setNative(isNative)
-        .setWasmInfo(getWasmInfo(declarationMethodElement))
         .setFinal(isFinal(declarationMethodElement))
         .setDefaultMethod(isDefault)
         .setAbstract(isAbstract(declarationMethodElement))
         .setSynthetic(isSynthetic(declarationMethodElement))
         .setEnumSyntheticMethod(isEnumSyntheticMethod(declarationMethodElement))
-        .setSideEffectFree(isAnnotatedWithHasNoSideEffects(declarationMethodElement))
-        .setUnusableByJsSuppressed(
-            JsInteropAnnotationUtils.isUnusableByJsSuppressed(declarationMethodElement))
-        .setDeprecated(isDeprecated(declarationMethodElement))
-        .setUncheckedCast(hasUncheckedCast)
         .build();
   }
 
@@ -972,8 +959,6 @@ class HackedJavaEnvironment {
         .setVisibility(getVisibility(typeElement))
         .setDeclaredMethodDescriptorsFactory(declaredMethods)
         .setDeclaredFieldDescriptorsFactory(declaredFields)
-        .setUnusableByJsSuppressed(JsInteropAnnotationUtils.isUnusableByJsSuppressed(typeElement))
-        .setDeprecated(isDeprecated(typeElement))
         .build();
   }
 
@@ -994,13 +979,4 @@ class HackedJavaEnvironment {
     return ctorMethodDescriptorFromJavaConstructor(ctor);
   }
 
-  private static String getWasmInfo(Element element) {
-    AnnotationMirror wasmAnnotation =
-        AnnotationUtils.findAnnotationBindingByName(
-            element.getAnnotationMirrors(), WASM_ANNOTATION_NAME);
-    if (wasmAnnotation == null) {
-      return null;
-    }
-    return AnnotationUtils.getAnnotationParameterString(wasmAnnotation, "value");
-  }
 }
