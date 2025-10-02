@@ -49,7 +49,6 @@
         <dependency>
             <groupId>com.google.jsinterop</groupId>
             <artifactId>jsinterop-annotations</artifactId>
-            <version>${com.google.jsinterop.annotations.version}</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
