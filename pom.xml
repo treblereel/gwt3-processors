@@ -4,7 +4,7 @@
 
   <groupId>org.treblereel.j2cl.processors</groupId>
   <artifactId>parent</artifactId>
-  <version>0.8</version>
+  <version>0.9</version>
   <packaging>pom</packaging>
 
   <name>GWT3 processors parent</name>
@@ -50,7 +50,7 @@
     <maven.release.plugin.version>2.5.3</maven.release.plugin.version>
     <nexus.staging.maven.plugin.version>1.6.7</nexus.staging.maven.plugin.version>
     <maven.scm.provider.gitexe.plugin.version>1.9.5</maven.scm.provider.gitexe.plugin.version>
-    <maven.fmt.plugin>2.20</maven.fmt.plugin>
+    <maven.fmt.plugin>2.29</maven.fmt.plugin>
     <maven.javadoc.plugin>3.0.1</maven.javadoc.plugin>
     <maven.source.plugin>3.0.1</maven.source.plugin>
     <maven.gpg.plugin>1.6</maven.gpg.plugin>
