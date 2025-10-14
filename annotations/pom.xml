@@ -13,7 +13,12 @@
   <name>GWT3 annotations</name>
   <description>This artifact contains annotations for GWT3 processors</description>
   <url>https://github.com/treblereel/gwt3-processors</url>
-
+  <scm>
+      <url>https://github.com/treblereel/gwt3-processors</url>
+      <connection>scm:git:git://github.com/treblereel/gwt3-processors.git</connection>
+      <developerConnection>scm:git:git@github.com:treblereel/gwt3-processors.git</developerConnection>
+      <tag>HEAD</tag>
+  </scm>
   <developers>
     <developer>
       <id>treblereel</id>

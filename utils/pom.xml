@@ -14,6 +14,13 @@
     <name>J2CL generation utils</name>
     <description>J2CL generation utils</description>
     <packaging>jar</packaging>
+    <url>https://github.com/treblereel/gwt3-processors</url>
+    <scm>
+        <url>https://github.com/treblereel/gwt3-processors</url>
+        <connection>scm:git:git://github.com/treblereel/gwt3-processors.git</connection>
+        <developerConnection>scm:git:git@github.com:treblereel/gwt3-processors.git</developerConnection>
+        <tag>HEAD</tag>
+    </scm>
 
     <developers>
         <developer>
