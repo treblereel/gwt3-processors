@@ -5,7 +5,7 @@
 
   <groupId>org.treblereel.j2cl</groupId>
   <artifactId>jsenv</artifactId>
-  <version>0.9</version>
+  <version>0.10</version>
   <packaging>jar</packaging>
 
   <name>GWTExports Tests ADVANCED mode</name>
@@ -25,7 +25,7 @@
     <maven.surefire.plugin>3.1.0</maven.surefire.plugin>
     <maven.source.plugin>3.0.1</maven.source.plugin>
     <maven.license.plugin>3.0</maven.license.plugin>
-    <j2cl.platform.version>20251001-1</j2cl.platform.version>
+    <j2cl.platform.version>20260527-1</j2cl.platform.version>
     <selenium.chrome.driver.version>4.12.1</selenium.chrome.driver.version>
   </properties>
 

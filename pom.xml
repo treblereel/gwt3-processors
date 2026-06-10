@@ -5,7 +5,7 @@
 
     <groupId>org.treblereel.j2cl.processors</groupId>
     <artifactId>parent</artifactId>
-    <version>0.9</version>
+    <version>0.10</version>
     <packaging>pom</packaging>
 
     <name>GWT3 processors parent</name>
@@ -59,10 +59,9 @@
         <maven.shade.plugin>3.5.1</maven.shade.plugin>
         <maven.license.plugin>3.0</maven.license.plugin>
 
-        <j2cl.version>v20250822-1</j2cl.version>
-        <j2cl.platform.version>20251001-1</j2cl.platform.version>
-        <ow2.asm.version>9.7.1</ow2.asm.version>
+        <j2cl.platform.version>20260527-1</j2cl.platform.version>
         <auto.common.version>1.2.2</auto.common.version>
+        <compile.testing.version>0.21.0</compile.testing.version>
         <auto.service.version>1.1.1</auto.service.version>
         <classgraph.version>4.8.179</classgraph.version>
         <freemarker.version>2.3.30</freemarker.version>
@@ -90,24 +89,6 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-            <dependency>
-                <groupId>org.kie.j2cl.tools</groupId>
-                <artifactId>frontend-common</artifactId>
-                <version>${j2cl.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.kie.j2cl.tools</groupId>
-                <artifactId>frontend-javac</artifactId>
-                <version>${j2cl.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.ow2.asm</groupId>
-                <artifactId>asm</artifactId>
-                <version>${ow2.asm.version}</version>
-            </dependency>
-
             <dependency>
                 <groupId>org.apache.maven.resolver</groupId>
                 <artifactId>maven-resolver-api</artifactId>

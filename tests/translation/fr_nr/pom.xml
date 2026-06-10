@@ -5,7 +5,7 @@
 
     <groupId>org.treblereel.j2cl</groupId>
     <artifactId>translation-fr-nr</artifactId>
-    <version>0.9</version>
+    <version>0.10</version>
     <packaging>jar</packaging>
 
     <name>Translation Tests fr-nr</name>
@@ -25,7 +25,7 @@
         <maven.surefire.plugin>3.1.0</maven.surefire.plugin>
         <maven.source.plugin>3.0.1</maven.source.plugin>
         <maven.license.plugin>3.0</maven.license.plugin>
-        <j2cl.platform.version>20251001-1</j2cl.platform.version>
+        <j2cl.platform.version>20260527-1</j2cl.platform.version>
         <maven.jasmine.plugin.version>3.0-beta-02</maven.jasmine.plugin.version>
     </properties>
 
