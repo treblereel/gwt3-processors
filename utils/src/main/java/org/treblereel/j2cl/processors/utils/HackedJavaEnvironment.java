@@ -978,5 +978,4 @@ class HackedJavaEnvironment {
             .orElseGet(() -> AstUtils.createImplicitConstructorDescriptor(typeDeclaration));
     return ctorMethodDescriptorFromJavaConstructor(ctor);
   }
-
 }

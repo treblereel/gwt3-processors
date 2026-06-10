@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.treblereel.j2cl</groupId>
         <artifactId>tests-parent</artifactId>
-        <version>0.8</version>
+        <version>0.9</version>
     </parent>
 
     <artifactId>resources</artifactId>
@@ -46,17 +46,6 @@
                 </includes>
             </resource>
         </resources>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>${maven.compiler.plugin.version}</version>
-                <configuration>
-                    <source>11</source>
-                    <target>11</target>
-                </configuration>
-            </plugin>
-        </plugins>
     </build>
 
 </project>

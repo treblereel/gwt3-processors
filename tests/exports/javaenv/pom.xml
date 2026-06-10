@@ -5,7 +5,7 @@
 
   <groupId>org.treblereel.j2cl</groupId>
   <artifactId>javaenv</artifactId>
-  <version>0.8</version>
+  <version>0.9</version>
   <packaging>jar</packaging>
 
   <name>GWTExports java env Tests BUNDLE_JAR mode</name>
@@ -16,8 +16,8 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-    <maven.compiler.source>11</maven.compiler.source>
-    <maven.compiler.target>11</maven.compiler.target>
+    <maven.compiler.source>21</maven.compiler.source>
+    <maven.compiler.target>21</maven.compiler.target>
     <maven.compiler.version>3.8.0</maven.compiler.version>
     <maven.checkstyle.plugin.version>2.17</maven.checkstyle.plugin.version>
     <maven.deploy.plugin.version>2.8.2</maven.deploy.plugin.version>
@@ -26,14 +26,21 @@
     <maven.surefire.plugin>3.1.0</maven.surefire.plugin>
     <maven.source.plugin>3.0.1</maven.source.plugin>
     <maven.license.plugin>3.0</maven.license.plugin>
-    <maven.j2cl.plugin>0.23.4</maven.j2cl.plugin>
-
-    <maven.j2cl.version>v20250822-1</maven.j2cl.version>
+    <j2cl.platform.version>20251001-1</j2cl.platform.version>
     <selenium.chrome.driver.version>4.12.1</selenium.chrome.driver.version>
-    <junit.version>4.13.1</junit.version>
-
-    <elemental2.version>1.3.2</elemental2.version>
   </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.treblereel.j2cl.platform</groupId>
+        <artifactId>bom</artifactId>
+        <version>${j2cl.platform.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <dependencies>
     <dependency>
@@ -45,39 +52,33 @@
     <dependency>
       <groupId>com.google.elemental2</groupId>
       <artifactId>elemental2-core</artifactId>
-      <version>${elemental2.version}</version>
     </dependency>
 
     <dependency>
       <groupId>com.google.elemental2</groupId>
       <artifactId>elemental2-dom</artifactId>
-      <version>${elemental2.version}</version>
     </dependency>
     <!-- test dependencies -->
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>${junit.version}</version>
       <scope>test</scope>
     </dependency>
     <!-- test dependencies -->
     <dependency>
       <groupId>org.kie.j2cl.tools</groupId>
       <artifactId>junit-annotations</artifactId>
-      <version>${maven.j2cl.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.kie.j2cl.tools</groupId>
       <artifactId>gwttestcase-emul</artifactId>
-      <version>${maven.j2cl.version}</version>
       <classifier>sources</classifier>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.kie.j2cl.tools</groupId>
       <artifactId>junit-emul</artifactId>
-      <version>${maven.j2cl.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -109,7 +110,6 @@
       <plugin>
         <groupId>org.kie.j2cl.tools</groupId>
         <artifactId>j2cl-maven-plugin</artifactId>
-        <version>${maven.j2cl.plugin}</version>
         <executions>
           <execution>
             <id>build</id>
