@@ -23,15 +23,10 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
-import javax.tools.Diagnostic;
-import org.treblereel.j2cl.processors.common.resources.CSPHash;
 import org.treblereel.j2cl.processors.common.resources.ResourcePrototype;
 import org.treblereel.j2cl.processors.common.resources.TextResource;
 import org.treblereel.j2cl.processors.context.AptContext;
@@ -51,7 +46,6 @@ class TextResourceGenerator extends AbstractResourceGenerator {
   @Override
   void initializer(Map<String, Object> root, TypeElement clientBundle, ExecutableElement method) {
     String resource = lookupResource(method);
-    emitCSPHash(resource, method);
     String encoded = write(resource, method, s -> "return " + s);
     Map<String, Object> definition = new HashMap<>();
     definition.put("name", method.getSimpleName().toString());
@@ -65,36 +59,6 @@ class TextResourceGenerator extends AbstractResourceGenerator {
       template.process(definition, out);
       root.put("initializer", os.toString());
     } catch (TemplateException | IOException e) {
-      throw new GenerationException(e);
-    }
-  }
-
-  private void emitCSPHash(String content, ExecutableElement method) {
-    CSPHash cspHash = method.getAnnotation(CSPHash.class);
-    if (cspHash == null) {
-      return;
-    }
-    try {
-      MessageDigest digest = MessageDigest.getInstance(cspHash.algorithm().digestName());
-      byte[] hash = digest.digest(content.getBytes(StandardCharsets.UTF_8));
-      String base64 = Base64.getEncoder().encodeToString(hash);
-      String directive =
-          cspHash.value() == CSPHash.Type.SCRIPT ? "script-src" : "style-src";
-      context
-          .getProcessingEnv()
-          .getMessager()
-          .printMessage(
-              Diagnostic.Kind.NOTE,
-              "CSP "
-                  + directive
-                  + " for "
-                  + method.getSimpleName()
-                  + ": '"
-                  + cspHash.algorithm().prefix()
-                  + "-"
-                  + base64
-                  + "'");
-    } catch (NoSuchAlgorithmException e) {
       throw new GenerationException(e);
     }
   }
