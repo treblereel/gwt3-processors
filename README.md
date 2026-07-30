@@ -114,6 +114,16 @@ It contains the following features:
     <br/><br/>
     Note: `{$arg}` is a placeholder for a string argument.
 
+    By default, the processor looks for `.properties` files whose name matches the interface name. You can override this by setting the `defaultValue` attribute on `@TranslationBundle`:
+
+  ```java
+    @TranslationBundle(defaultValue = "MyCustomMessages")
+    public interface MyBundle {
+      ...
+    }
+  ```
+  In this case the processor will look for `MyCustomMessages_en.properties`, `MyCustomMessages_fr.properties`, etc. instead of `MyBundle_*.properties`.
+
 5. Declare corresponding methods in your _MyBundle_ interface.
 
   ```java
@@ -131,11 +141,17 @@ It contains the following features:
   Default value is used if no translation property value is found for a given locale and key.
   If a value contains the `{$arg}` placeholder, it will be replaced with the argument provided to the method. Placeholder is surrounded with curly brackets and a corresponding method argument must be named the same; 
 
-6. Values can be in HTML, in this case HTML will be escaped. To unescape it, set `unescapeHtmlEntities = true` in the `@TranslationKey` annotation.
+6. Values can be in HTML. By default HTML tags are escaped by Closure Compiler. The `@TranslationKey` annotation provides two flags to control this behavior:
+
+    * `html = true` — marks the message as containing HTML, which affects how Closure Compiler processes the tags.
+    * `unescapeHtmlEntities = true` — unescapes HTML entities (e.g. `&lt;` back to `<`) in the output.
 
   ```java
       @TranslationKey(defaultValue = "<div>HELLO</div>", unescapeHtmlEntities = true)
       String hello();
+
+      @TranslationKey(defaultValue = "{$content}", html = true, unescapeHtmlEntities = true)
+      String render(String content);
   ```
    
 7. Each method should have a corresponding key value pair in a translation property file. Otherwise, a default value will be used. A method name can be overridden in `@TranslationKey` annotation.
@@ -144,6 +160,8 @@ It contains the following features:
       @TranslationKey(key = "greetings", defaultValue = "Hello World!")
       String hello();
   ```
+
+  Note: `.properties` files must use ISO-8859-1 encoding as per the Java specification. For characters outside this range, use Unicode escapes (e.g. `é` for `é`).
 
 * *@GWT3Resource* is a lightweight port of GWT2 resources. Its main purpose is to embed various resources into the JavaScript bundle.
 

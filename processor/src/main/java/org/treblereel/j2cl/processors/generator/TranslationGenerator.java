@@ -21,7 +21,6 @@ import com.google.javascript.jscomp.GoogleJsMessageIdGenerator;
 import com.google.javascript.jscomp.JsMessage;
 import com.google.javascript.jscomp.JsMessageVisitor;
 import com.google.javascript.jscomp.jarjar.com.google.common.collect.ImmutableList;
-import com.sun.source.util.Trees;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -33,7 +32,8 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.ElementFilter;
-import javax.tools.JavaFileObject;
+import javax.tools.FileObject;
+import javax.tools.StandardLocation;
 import org.treblereel.j2cl.processors.annotations.TranslationBundle;
 import org.treblereel.j2cl.processors.annotations.TranslationKey;
 import org.treblereel.j2cl.processors.context.AptContext;
@@ -263,10 +263,34 @@ public class TranslationGenerator extends AbstractGenerator {
     writeSource(name, sb.toString());
   }
 
+  private String getBundleName(Element element) {
+    TranslationBundle annotation = element.getAnnotation(TranslationBundle.class);
+    if (annotation != null
+        && !annotation.defaultValue().isEmpty()
+        && !"<auto>".equals(annotation.defaultValue())) {
+      return annotation.defaultValue();
+    }
+    return element.getSimpleName().toString();
+  }
+
   private Map<String, Set<Properties>> processBundles(Element element) {
-    Trees trees = Trees.instance(context.getProcessingEnv());
-    JavaFileObject sourceFile = trees.getPath(element).getCompilationUnit().getSourceFile();
-    URI uri = sourceFile.toUri();
+    String pkg = MoreElements.getPackage(element).getQualifiedName().toString();
+    try {
+      FileObject sourceFile =
+          context
+              .getProcessingEnv()
+              .getFiler()
+              .getResource(
+                  StandardLocation.SOURCE_PATH, pkg, element.getSimpleName().toString() + ".java");
+      return processBundlesFromUri(element, sourceFile.toUri());
+    } catch (IOException e) {
+      throw new GenerationException(
+          "Unable to locate source file for " + element.getSimpleName(), e);
+    }
+  }
+
+  private Map<String, Set<Properties>> processBundlesFromUri(Element element, URI uri) {
+    String bundleName = getBundleName(element);
 
     File f = new File(uri.getPath());
     File folder = f.getParentFile();
@@ -274,8 +298,7 @@ public class TranslationGenerator extends AbstractGenerator {
     File[] files =
         folder.listFiles(
             (dir, candidate) ->
-                candidate.startsWith(element.getSimpleName().toString())
-                    && candidate.endsWith(".properties"));
+                candidate.startsWith(bundleName) && candidate.endsWith(".properties"));
 
     Map<String, Set<Properties>> result = new HashMap<>();
 
@@ -285,8 +308,7 @@ public class TranslationGenerator extends AbstractGenerator {
 
     for (File file : files) {
       String filename = new File(file.getPath()).getName();
-      String locale =
-          filename.replaceFirst(element.getSimpleName().toString(), "").replace(".properties", "");
+      String locale = filename.replaceFirst(bundleName, "").replace(".properties", "");
       if (locale.startsWith("_")) {
         locale = locale.replaceFirst("_", "");
       }

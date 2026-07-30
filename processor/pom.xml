@@ -104,6 +104,13 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.testing.compile</groupId>
+            <artifactId>compile-testing</artifactId>
+            <version>${compile.testing.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
@@ -123,10 +130,6 @@
                 <version>3.8.0</version>
                 <configuration>
                     <fork>true</fork>
-                    <compilerArgs>
-                        <arg>--add-exports</arg>
-                        <arg>jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED</arg>
-                    </compilerArgs>
                 </configuration>
             </plugin>
             <plugin>
