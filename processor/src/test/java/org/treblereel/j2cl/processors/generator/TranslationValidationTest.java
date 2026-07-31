@@ -201,8 +201,7 @@ public class TranslationValidationTest {
                 + "  @TranslationKey(defaultValue = \"Hello from B\", key = \"greeting\")\n"
                 + "  String hello();\n"
                 + "}");
-    Compilation compilation =
-        javac().withProcessors(new GWT3Processor()).compile(bundle1, bundle2);
+    Compilation compilation = javac().withProcessors(new GWT3Processor()).compile(bundle1, bundle2);
     assertThat(compilation).succeeded();
   }
 

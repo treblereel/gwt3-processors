@@ -21,9 +21,15 @@ import com.google.javascript.jscomp.GoogleJsMessageIdGenerator;
 import com.google.javascript.jscomp.JsMessage;
 import com.google.javascript.jscomp.JsMessageVisitor;
 import com.google.javascript.jscomp.jarjar.com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.jarjar.com.google.gson.JsonElement;
+import com.google.javascript.jscomp.jarjar.com.google.gson.JsonObject;
+import com.google.javascript.jscomp.jarjar.com.google.gson.JsonParser;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 import javax.lang.model.element.Element;
@@ -298,7 +304,8 @@ public class TranslationGenerator extends AbstractGenerator {
     File[] files =
         folder.listFiles(
             (dir, candidate) ->
-                candidate.startsWith(bundleName) && candidate.endsWith(".properties"));
+                candidate.startsWith(bundleName)
+                    && (candidate.endsWith(".properties") || candidate.endsWith(".json")));
 
     Map<String, Set<Properties>> result = new HashMap<>();
 
@@ -308,7 +315,9 @@ public class TranslationGenerator extends AbstractGenerator {
 
     for (File file : files) {
       String filename = new File(file.getPath()).getName();
-      String locale = filename.replaceFirst(bundleName, "").replace(".properties", "");
+      boolean isJson = filename.endsWith(".json");
+      String locale =
+          filename.replaceFirst(bundleName, "").replace(isJson ? ".json" : ".properties", "");
       if (locale.startsWith("_")) {
         locale = locale.replaceFirst("_", "");
       }
@@ -316,14 +325,30 @@ public class TranslationGenerator extends AbstractGenerator {
         result.put(locale, new HashSet<>());
       }
       try {
-        Properties prop = new Properties();
-        prop.load(file.toURL().openStream());
+        Properties prop;
+        if (isJson) {
+          prop = loadJsonBundle(file);
+        } else {
+          prop = new Properties();
+          prop.load(file.toURL().openStream());
+        }
         result.get(locale).add(prop);
       } catch (IOException e) {
         throw new Error(e);
       }
     }
     return result;
+  }
+
+  private Properties loadJsonBundle(File file) throws IOException {
+    Properties prop = new Properties();
+    try (Reader reader = new InputStreamReader(file.toURL().openStream(), StandardCharsets.UTF_8)) {
+      JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
+      for (Map.Entry<String, JsonElement> entry : json.entrySet()) {
+        prop.setProperty(entry.getKey(), entry.getValue().getAsString());
+      }
+    }
+    return prop;
   }
 
   private ExecutableElement check(Element elm) {

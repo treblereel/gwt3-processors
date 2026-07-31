@@ -23,7 +23,6 @@ import static org.junit.Assert.assertTrue;
 import com.google.testing.compile.Compilation;
 import com.google.testing.compile.JavaFileObjects;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
@@ -184,15 +183,10 @@ public class TranslationOutputTest {
     assertThat(compilation).succeeded();
 
     String implSource = getGeneratedSource(compilation, "test.ImplTestBundleImpl");
+    assertTrue("Should implement the interface", implSource.contains("implements ImplTestBundle"));
+    assertTrue("Should have hello() method", implSource.contains("public String hello()"));
     assertTrue(
-        "Should implement the interface",
-        implSource.contains("implements ImplTestBundle"));
-    assertTrue(
-        "Should have hello() method",
-        implSource.contains("public String hello()"));
-    assertTrue(
-        "Should have bye(String) method",
-        implSource.contains("public String bye(String name)"));
+        "Should have bye(String) method", implSource.contains("public String bye(String name)"));
     assertTrue(
         "Should throw UnsupportedOperationException",
         implSource.contains("UnsupportedOperationException"));
@@ -217,9 +211,7 @@ public class TranslationOutputTest {
     assertThat(compilation).succeeded();
 
     String nativeJs = getGeneratedResource(compilation, "test", "CustomKeyBundleImpl.native.js");
-    assertTrue(
-        "Should use custom key in MSG variable",
-        nativeJs.contains("MSG_custom_greeting"));
+    assertTrue("Should use custom key in MSG variable", nativeJs.contains("MSG_custom_greeting"));
     assertTrue("Should use custom key in @desc", nativeJs.contains("/** @desc custom_greeting */"));
   }
 }
