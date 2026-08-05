@@ -1,5 +1,5 @@
 [![GitHub license](https://img.shields.io/github/license/treblereel/gwt3-processors)](https://github.com/treblereel/gwt3-processors/blob/main/LICENSE)
-![Sonatype Nexus (Releases)](https://img.shields.io/nexus/r/org.treblereel.j2cl.processors/processors?server=https%3A%2F%2Foss.sonatype.org&style=plastic)
+[![Maven Central](https://img.shields.io/maven-central/v/org.treblereel.j2cl.processors/annotations?style=plastic)](https://search.maven.org/search?q=g:org.treblereel.j2cl.processors)
 [![Join the chat at https://gitter.im/vertispan/j2cl](https://img.shields.io/badge/GITTER-join%20chat-green.svg)](https://gitter.im/vertispan/j2cl?utm_source=badge)
 
 
