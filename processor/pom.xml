@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.treblereel.j2cl.processors</groupId>
         <artifactId>parent</artifactId>
-        <version>0.8</version>
+        <version>0.11</version>
     </parent>
 
     <artifactId>processors</artifactId>
@@ -13,6 +13,14 @@
     <name>GWT3 processors</name>
     <description>apt GWT3 processors</description>
     <packaging>jar</packaging>
+
+    <url>https://github.com/treblereel/gwt3-processors</url>
+    <scm>
+        <url>https://github.com/treblereel/gwt3-processors</url>
+        <connection>scm:git:git://github.com/treblereel/gwt3-processors.git</connection>
+        <developerConnection>scm:git:git@github.com:treblereel/gwt3-processors.git</developerConnection>
+        <tag>HEAD</tag>
+    </scm>
 
     <developers>
         <developer>
@@ -49,7 +57,6 @@
         <dependency>
             <groupId>com.google.jsinterop</groupId>
             <artifactId>jsinterop-annotations</artifactId>
-            <version>${com.google.jsinterop.annotations.version}</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
@@ -97,6 +104,13 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.testing.compile</groupId>
+            <artifactId>compile-testing</artifactId>
+            <version>${compile.testing.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
@@ -116,10 +130,6 @@
                 <version>3.8.0</version>
                 <configuration>
                     <fork>true</fork>
-                    <compilerArgs>
-                        <arg>--add-exports</arg>
-                        <arg>jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED</arg>
-                    </compilerArgs>
                 </configuration>
             </plugin>
             <plugin>

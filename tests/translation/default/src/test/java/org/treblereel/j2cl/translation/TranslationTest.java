@@ -127,4 +127,29 @@ public class TranslationTest {
               " * Messages must be initialized in the form:"));
     }
   }
+
+  MyJsonBundle jsonBundle = new MyJsonBundleImpl();
+
+  @Test
+  public void jsonGreeting() {
+    if (System.getProperty("goog.LOCALE").equals("fr")) {
+      assertEquals("Bonjour depuis JSON!", jsonBundle.jsonGreeting());
+    } else if (System.getProperty("goog.LOCALE").equals("fr-nr")) {
+      assertEquals("Bonjour depuis JSON!", jsonBundle.jsonGreeting());
+    } else {
+      assertEquals("Hello from JSON bundle!", jsonBundle.jsonGreeting());
+    }
+  }
+
+  @Test
+  public void jsonHello() {
+    if (System.getProperty("goog.LOCALE").startsWith("fr")) {
+      assertEquals("Bonjour World depuis JSON!", jsonBundle.jsonHello("World"));
+    } else if (System.getProperty("goog.LOCALE").startsWith("br_rf")) {
+      assertEquals("Hello World!", jsonBundle.jsonHello("World"));
+    } else {
+      assertEquals("Hello World from JSON!", jsonBundle.jsonHello("World"));
+    }
+  }
+
 }

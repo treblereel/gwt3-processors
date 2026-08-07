@@ -1,0 +1,4 @@
+{
+  "jsonGreeting": "Hello from JSON bundle!",
+  "jsonHello": "Hello {$name} from JSON!"
+}

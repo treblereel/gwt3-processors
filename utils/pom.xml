@@ -5,7 +5,7 @@
     <parent>
         <artifactId>parent</artifactId>
         <groupId>org.treblereel.j2cl.processors</groupId>
-        <version>0.8</version>
+        <version>0.11</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -14,6 +14,13 @@
     <name>J2CL generation utils</name>
     <description>J2CL generation utils</description>
     <packaging>jar</packaging>
+    <url>https://github.com/treblereel/gwt3-processors</url>
+    <scm>
+        <url>https://github.com/treblereel/gwt3-processors</url>
+        <connection>scm:git:git://github.com/treblereel/gwt3-processors.git</connection>
+        <developerConnection>scm:git:git@github.com:treblereel/gwt3-processors.git</developerConnection>
+        <tag>HEAD</tag>
+    </scm>
 
     <developers>
         <developer>
@@ -38,22 +45,21 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.google.auto</groupId>
-            <artifactId>auto-common</artifactId>
-            <version>${auto.common.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.kie.j2cl.tools</groupId>
-            <artifactId>frontend-common</artifactId>
+            <groupId>com.google.jsinterop</groupId>
+            <artifactId>jsinterop-annotations</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>org.kie.j2cl.tools</groupId>
-            <artifactId>frontend-javac</artifactId>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.ow2.asm</groupId>
-            <artifactId>asm</artifactId>
+            <groupId>com.google.testing.compile</groupId>
+            <artifactId>compile-testing</artifactId>
+            <version>${compile.testing.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

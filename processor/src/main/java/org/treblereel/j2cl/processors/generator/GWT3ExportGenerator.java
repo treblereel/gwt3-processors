@@ -41,6 +41,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
+import jsinterop.annotations.JsMethod;
 import jsinterop.annotations.JsType;
 import org.treblereel.j2cl.processors.annotations.ES6Module;
 import org.treblereel.j2cl.processors.annotations.GWT3EntryPoint;
@@ -154,7 +155,7 @@ public class GWT3ExportGenerator extends AbstractGenerator {
     checkClazz(parent);
     TypeMirror type = context.getProcessingEnv().getTypeUtils().erasure(parent.asType());
     String name = getExportName(parent);
-    String nameCtor = utils.getDefaultConstructor(parent).getMangledName();
+    String nameCtor = utils.getDefaultConstructorMangledName(parent);
     boolean isNative = parent.getAnnotation(JsType.class) != null;
     return new ExportDTO(name, type.toString(), type.toString(), nameCtor, isNative);
   }
@@ -162,7 +163,15 @@ public class GWT3ExportGenerator extends AbstractGenerator {
   private MethodDTO getMethodDTO(TypeElement parent, Element m) {
     ExecutableElement method = checkMethod(m);
     String methodName = getSimpleName(method);
-    String mangleName = utils.getMethodMangledName(method);
+
+    String mangleName;
+
+    if (method.getEnclosingElement().getAnnotation(JsType.class) != null
+        || method.getAnnotation(JsMethod.class) != null) {
+      mangleName = method.getSimpleName().toString();
+    } else {
+      mangleName = utils.getMethodMangledName(method, parent);
+    }
     return new MethodDTO(methodName, mangleName, m.getModifiers().contains(Modifier.STATIC));
   }
 

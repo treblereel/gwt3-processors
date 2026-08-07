@@ -5,8 +5,9 @@ import static org.junit.Assert.assertTrue;
 
 import java.net.MalformedURLException;
 import java.nio.file.Path;
-import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -14,14 +15,18 @@ import org.openqa.selenium.chrome.ChromeOptions;
 
 public class ExportsTest {
 
-  private ChromeDriver driver;
+  private static ChromeDriver driver;
 
-  @Before
-  public void setup() throws MalformedURLException {
+  @BeforeClass
+  public static void setupClass() {
     ChromeOptions options = new ChromeOptions();
     options.addArguments("--headless", "--window-size=1920,1200");
 
     driver = new ChromeDriver(options);
+  }
+
+  @Before
+  public void setup() throws MalformedURLException {
     Path path = Path.of("target", "j2cl", "launcherDir", "index.html");
     driver.get(path.toUri().toURL().toString());
     assertEquals("J2CL", driver.getTitle());
@@ -853,8 +858,10 @@ public class ExportsTest {
     assertEquals("static_fieldThree", result);
   }
 
-  @After
-  public void after() {
-    driver.quit();
+  @AfterClass
+  public static void afterClass() {
+    if (driver != null) {
+      driver.quit();
+    }
   }
 }

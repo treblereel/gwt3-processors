@@ -11,6 +11,8 @@
 # BlueJ files
 *.ctxt
 
+.DS_Store
+
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
 
@@ -30,3 +32,4 @@ hs_err_pid*
 target/
 
 dependency-reduced-pom.xml
+.flattened-pom.xml

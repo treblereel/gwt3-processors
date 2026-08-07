@@ -21,10 +21,15 @@ import com.google.javascript.jscomp.GoogleJsMessageIdGenerator;
 import com.google.javascript.jscomp.JsMessage;
 import com.google.javascript.jscomp.JsMessageVisitor;
 import com.google.javascript.jscomp.jarjar.com.google.common.collect.ImmutableList;
-import com.sun.source.util.Trees;
+import com.google.javascript.jscomp.jarjar.com.google.gson.JsonElement;
+import com.google.javascript.jscomp.jarjar.com.google.gson.JsonObject;
+import com.google.javascript.jscomp.jarjar.com.google.gson.JsonParser;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 import javax.lang.model.element.Element;
@@ -33,7 +38,8 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.ElementFilter;
-import javax.tools.JavaFileObject;
+import javax.tools.FileObject;
+import javax.tools.StandardLocation;
 import org.treblereel.j2cl.processors.annotations.TranslationBundle;
 import org.treblereel.j2cl.processors.annotations.TranslationKey;
 import org.treblereel.j2cl.processors.context.AptContext;
@@ -169,7 +175,7 @@ public class TranslationGenerator extends AbstractGenerator {
     String key = getKey(method);
     JsMessage asJsMessage = toJsMessage(key, translationKey.defaultValue());
     validatePlaceHolders(method, asJsMessage);
-    String jsMethodName = utils.createDeclarationMethodDescriptor(method).getMangledName();
+    String jsMethodName = utils.getMethodMangledName(method);
 
     sb.append(impl);
     sb.append(".prototype.");
@@ -263,10 +269,34 @@ public class TranslationGenerator extends AbstractGenerator {
     writeSource(name, sb.toString());
   }
 
+  private String getBundleName(Element element) {
+    TranslationBundle annotation = element.getAnnotation(TranslationBundle.class);
+    if (annotation != null
+        && !annotation.defaultValue().isEmpty()
+        && !"<auto>".equals(annotation.defaultValue())) {
+      return annotation.defaultValue();
+    }
+    return element.getSimpleName().toString();
+  }
+
   private Map<String, Set<Properties>> processBundles(Element element) {
-    Trees trees = Trees.instance(context.getProcessingEnv());
-    JavaFileObject sourceFile = trees.getPath(element).getCompilationUnit().getSourceFile();
-    URI uri = sourceFile.toUri();
+    String pkg = MoreElements.getPackage(element).getQualifiedName().toString();
+    try {
+      FileObject sourceFile =
+          context
+              .getProcessingEnv()
+              .getFiler()
+              .getResource(
+                  StandardLocation.SOURCE_PATH, pkg, element.getSimpleName().toString() + ".java");
+      return processBundlesFromUri(element, sourceFile.toUri());
+    } catch (IOException e) {
+      throw new GenerationException(
+          "Unable to locate source file for " + element.getSimpleName(), e);
+    }
+  }
+
+  private Map<String, Set<Properties>> processBundlesFromUri(Element element, URI uri) {
+    String bundleName = getBundleName(element);
 
     File f = new File(uri.getPath());
     File folder = f.getParentFile();
@@ -274,8 +304,8 @@ public class TranslationGenerator extends AbstractGenerator {
     File[] files =
         folder.listFiles(
             (dir, candidate) ->
-                candidate.startsWith(element.getSimpleName().toString())
-                    && candidate.endsWith(".properties"));
+                candidate.startsWith(bundleName)
+                    && (candidate.endsWith(".properties") || candidate.endsWith(".json")));
 
     Map<String, Set<Properties>> result = new HashMap<>();
 
@@ -285,8 +315,9 @@ public class TranslationGenerator extends AbstractGenerator {
 
     for (File file : files) {
       String filename = new File(file.getPath()).getName();
+      boolean isJson = filename.endsWith(".json");
       String locale =
-          filename.replaceFirst(element.getSimpleName().toString(), "").replace(".properties", "");
+          filename.replaceFirst(bundleName, "").replace(isJson ? ".json" : ".properties", "");
       if (locale.startsWith("_")) {
         locale = locale.replaceFirst("_", "");
       }
@@ -294,14 +325,30 @@ public class TranslationGenerator extends AbstractGenerator {
         result.put(locale, new HashSet<>());
       }
       try {
-        Properties prop = new Properties();
-        prop.load(file.toURL().openStream());
+        Properties prop;
+        if (isJson) {
+          prop = loadJsonBundle(file);
+        } else {
+          prop = new Properties();
+          prop.load(file.toURL().openStream());
+        }
         result.get(locale).add(prop);
       } catch (IOException e) {
         throw new Error(e);
       }
     }
     return result;
+  }
+
+  private Properties loadJsonBundle(File file) throws IOException {
+    Properties prop = new Properties();
+    try (Reader reader = new InputStreamReader(file.toURL().openStream(), StandardCharsets.UTF_8)) {
+      JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
+      for (Map.Entry<String, JsonElement> entry : json.entrySet()) {
+        prop.setProperty(entry.getKey(), entry.getValue().getAsString());
+      }
+    }
+    return prop;
   }
 
   private ExecutableElement check(Element elm) {

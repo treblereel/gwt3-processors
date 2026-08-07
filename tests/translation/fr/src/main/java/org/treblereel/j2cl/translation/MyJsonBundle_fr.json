@@ -1,0 +1,4 @@
+{
+  "jsonGreeting": "Bonjour depuis JSON!",
+  "jsonHello": "Bonjour {$name} depuis JSON!"
+}
