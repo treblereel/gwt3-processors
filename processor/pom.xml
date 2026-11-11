@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.treblereel.j2cl.processors</groupId>
         <artifactId>parent</artifactId>
-        <version>0.11</version>
+        <version>0.12</version>
     </parent>
 
     <artifactId>processors</artifactId>
@@ -74,11 +74,6 @@
             <version>${auto.common.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.google.auto.service</groupId>
-            <artifactId>auto-service</artifactId>
-            <version>${auto.service.version}</version>
-        </dependency>
-        <dependency>
             <groupId>io.github.classgraph</groupId>
             <artifactId>classgraph</artifactId>
             <version>${classgraph.version}</version>
@@ -127,9 +122,11 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.0</version>
+                <version>3.15.0</version>
                 <configuration>
                     <fork>true</fork>
+                    <!-- The processor cannot load its own service before it is compiled. -->
+                    <proc>none</proc>
                 </configuration>
             </plugin>
             <plugin>

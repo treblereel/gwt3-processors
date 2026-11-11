@@ -153,5 +153,4 @@ public class TranslationTest {
       assertEquals("Hello World from JSON!", jsonBundle.jsonHello("World"));
     }
   }
-
 }
