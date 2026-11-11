@@ -5,7 +5,7 @@
 
     <groupId>org.treblereel.j2cl.processors</groupId>
     <artifactId>parent</artifactId>
-    <version>0.11</version>
+    <version>0.12</version>
     <packaging>pom</packaging>
 
     <name>GWT3 processors parent</name>
@@ -59,7 +59,7 @@
         <maven.shade.plugin>3.5.1</maven.shade.plugin>
         <maven.license.plugin>3.0</maven.license.plugin>
 
-        <j2cl.platform.version>20260906-1</j2cl.platform.version>
+        <j2cl.platform.version>20261107-1</j2cl.platform.version>
         <auto.common.version>1.2.2</auto.common.version>
         <compile.testing.version>0.21.0</compile.testing.version>
         <classgraph.version>4.8.179</classgraph.version>

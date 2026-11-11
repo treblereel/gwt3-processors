@@ -32,7 +32,7 @@ import org.treblereel.j2cl.processors.resource.ResourceOracle;
 public class ResourceOracleImpl implements ResourceOracle {
   private final AptContext aptContext;
 
-  private final List<Location> locations =
+  private static final List<Location> locations =
       Arrays.asList(
           StandardLocation.SOURCE_PATH,
           StandardLocation.SOURCE_OUTPUT,
@@ -79,7 +79,7 @@ public class ResourceOracleImpl implements ResourceOracle {
     if (resource != null) {
       return resource;
     }
-    return doFindResource(locations, pkg, relativeName);
+    return doFindResource(pkg, relativeName);
   }
 
   /**
@@ -87,12 +87,8 @@ public class ResourceOracleImpl implements ResourceOracle {
    *
    * @return FileObject or null if file is not found in given locations.
    */
-  private URL doFindResource(
-      List<Location> searchLocations, CharSequence pkg, CharSequence relativeName) {
-    if (searchLocations == null || searchLocations.isEmpty()) {
-      return null;
-    }
-    for (Location location : searchLocations) {
+  private URL doFindResource(CharSequence pkg, CharSequence relativeName) {
+    for (Location location : locations) {
       String path = "";
       if (pkg.length() > 0) {
         path = String.valueOf(pkg).replace('.', '/') + '/';
@@ -123,9 +119,8 @@ public class ResourceOracleImpl implements ResourceOracle {
           // ignored
         }
       }
-      // ignored
-    } catch (IOException ignored) {
-      // ignored
+    } catch (IllegalArgumentException | IOException e) {
+      // ignored, turbine throws IllegalArgumentException on SOURCE_PATH
     }
     return null;
   }

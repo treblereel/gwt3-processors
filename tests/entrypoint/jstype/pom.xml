@@ -5,7 +5,7 @@
 
     <groupId>org.treblereel.j2cl</groupId>
     <artifactId>entrypoint-jstype-tests</artifactId>
-    <version>0.11</version>
+    <version>0.12</version>
 
     <name>GWT3 Entry Point Tests for @JsType class</name>
     <description>Test cases for the GWT3 Entry Point for @JsType class</description>
@@ -24,7 +24,7 @@
         <maven.surefire.plugin>3.1.0</maven.surefire.plugin>
         <maven.source.plugin>3.0.1</maven.source.plugin>
         <maven.license.plugin>3.0</maven.license.plugin>
-        <j2cl.platform.version>20260906-1</j2cl.platform.version>
+        <j2cl.platform.version>20261107-1</j2cl.platform.version>
         <selenium.chrome.driver.version>4.49.0</selenium.chrome.driver.version>
     </properties>
 
@@ -85,7 +85,7 @@
             <plugin>
                 <groupId>org.treblereel.j2cl.plugin</groupId>
                 <artifactId>j2cl-maven-plugin</artifactId>
-                <version>0.24.2</version>
+                <version>0.24.3</version>
                 <executions>
                     <execution>
                         <id>build-js</id>
