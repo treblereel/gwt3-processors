@@ -50,10 +50,10 @@ jobs:
           distribution: 'temurin'
       - name: Set up maven wrapper for specified version
         run: |
-          mvn wrapper:wrapper -Dmaven=${{ matrix.mvn }}
+          mvn -N wrapper:wrapper -Dmaven=${{ matrix.mvn }}
       - name: Build and test
         run: |
-          mvn -B package --file pom.xml
+          ./mvnw -B package --file pom.xml
       - name: Upload test results for review
         uses: actions/upload-artifact@v4
         if: always()

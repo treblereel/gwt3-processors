@@ -125,6 +125,8 @@
                 <version>3.15.0</version>
                 <configuration>
                     <fork>true</fork>
+                    <!-- The processor cannot load its own service before it is compiled. -->
+                    <proc>none</proc>
                 </configuration>
             </plugin>
             <plugin>
